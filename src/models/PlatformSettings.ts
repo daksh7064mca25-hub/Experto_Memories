@@ -25,12 +25,12 @@ export interface IPlatformSettingsDoc extends Document {
 
 const ManualUpiConfigSchema = new Schema<IManualUpiConfig>(
   {
-    bankName: { type: String, default: "State Bank of India" },
-    accountNumber: { type: String, default: "31310000000" },
-    ifscCode: { type: String, default: "SBIN0001234" },
-    upiId: { type: String, default: "dakshbabbar31@oksbi" },
-    displayName: { type: String, default: "Experto Memories" },
-    qrCodeUrl: { type: String, default: "/images/upi-qr.jpeg" },
+    bankName: { type: String, default: "Primary Bank" },
+    accountNumber: { type: String, default: "" },
+    ifscCode: { type: String, default: "" },
+    upiId: { type: String, default: () => process.env.MANUAL_UPI_ID || "" },
+    displayName: { type: String, default: () => process.env.MANUAL_UPI_NAME || "ExpertoMemories" },
+    qrCodeUrl: { type: String, default: () => process.env.MANUAL_UPI_QR_URL || "/images/upi-qr.jpeg" },
   },
   { _id: false }
 );
@@ -72,12 +72,12 @@ const PlatformSettingsSchema = new Schema<IPlatformSettingsDoc>(
     manualUpiConfig: {
       type: ManualUpiConfigSchema,
       default: () => ({
-        bankName: "State Bank of India",
-        accountNumber: "31310000000",
-        ifscCode: "SBIN0001234",
-        upiId: "dakshbabbar31@oksbi",
-        displayName: "Experto Memories",
-        qrCodeUrl: "/images/upi-qr.jpeg",
+        bankName: "Primary Bank",
+        accountNumber: "",
+        ifscCode: "",
+        upiId: process.env.MANUAL_UPI_ID || "",
+        displayName: process.env.MANUAL_UPI_NAME || "ExpertoMemories",
+        qrCodeUrl: process.env.MANUAL_UPI_QR_URL || "/images/upi-qr.jpeg",
       }),
     },
     updatedBy: {
@@ -109,12 +109,12 @@ export async function getPlatformSettings(): Promise<IPlatformSettingsDoc> {
       cnameTarget: "cname.expertomemories.com",
       paymentMethodsAllowed: "both",
       manualUpiConfig: {
-        bankName: "State Bank of India",
-        accountNumber: "31310000000",
-        ifscCode: "SBIN0001234",
-        upiId: "dakshbabbar31@oksbi",
-        displayName: "Experto Memories",
-        qrCodeUrl: "/images/upi-qr.jpeg",
+        bankName: "Primary Bank",
+        accountNumber: "",
+        ifscCode: "",
+        upiId: process.env.MANUAL_UPI_ID || "",
+        displayName: process.env.MANUAL_UPI_NAME || "ExpertoMemories",
+        qrCodeUrl: process.env.MANUAL_UPI_QR_URL || "/images/upi-qr.jpeg",
       },
     });
   }

@@ -14,14 +14,14 @@ export function getManualUpiConfig(settingsUpi?: {
     process.env.MANUAL_UPI_ID ||
     process.env.UPI_ID ||
     settingsUpi?.upiId ||
-    "dakshbabbar31@oksbi";
+    "";
 
   // Determine Payee Name
   const payeeName =
     process.env.MANUAL_UPI_NAME ||
     process.env.UPI_NAME ||
     settingsUpi?.displayName ||
-    "Experto Memories";
+    "ExpertoMemories";
 
   // Determine QR Image URL
   let qrImageUrl =

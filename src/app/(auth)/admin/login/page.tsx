@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Lock, Mail, ArrowRight, Sparkles, Key } from "lucide-react";
+import { Heart, Lock, Mail, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@expertomemories.in");
-  const [password, setPassword] = useState("apology123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@expertomemories.in"
+                placeholder="admin@example.com"
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-pink-50/50 border border-pink-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all text-rose-950"
               />
             </div>
@@ -93,15 +93,6 @@ export default function AdminLoginPage() {
                 placeholder="••••••••"
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-pink-50/50 border border-pink-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all text-rose-950"
               />
-            </div>
-          </div>
-
-          {/* Quick Demo Credentials Reminder */}
-          <div className="p-3 rounded-xl bg-pink-50/80 border border-pink-200/60 text-[11px] text-rose-800 flex items-start gap-2">
-            <Key size={14} className="shrink-0 text-rose-500 mt-0.5" />
-            <div>
-              <span className="font-semibold">Local Access: </span>
-              Pre-filled with default studio credentials (<code className="bg-white/80 px-1 py-0.5 rounded">apology123</code>).
             </div>
           </div>
 

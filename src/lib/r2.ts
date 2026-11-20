@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export function getR2BucketName(): string {
-  return process.env.R2_BUCKET_NAME || "expertomemories-media";
+  return process.env.R2_BUCKET_NAME || "";
 }
 
 export function getR2PublicDomain(): string {

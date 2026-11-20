@@ -5,3 +5,12 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Omit non-secret public configuration variables from false-positive secrets detection.
+  # Genuine secrets (JWT_SECRET, ADMIN_PASSWORD, ADMIN_EMAIL, MONGODB_URI, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, RAZORPAY_*)
+  # remain strictly scanned and protected.
+  SECRETS_SCAN_OMIT_KEYS = "MANUAL_UPI_ID,MANUAL_UPI_NAME,MANUAL_UPI_QR_URL,R2_BUCKET_NAME"
+
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

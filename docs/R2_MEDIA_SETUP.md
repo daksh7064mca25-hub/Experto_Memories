@@ -27,15 +27,15 @@ Add the following keys to `.env.local` / production environment:
 CLOUDFLARE_R2_ACCOUNT_ID="your_cloudflare_account_id"
 CLOUDFLARE_R2_ACCESS_KEY_ID="your_r2_access_key_id"
 CLOUDFLARE_R2_SECRET_ACCESS_KEY="your_r2_secret_access_key"
-CLOUDFLARE_R2_BUCKET_NAME="expertomemories-media"
-CLOUDFLARE_R2_PUBLIC_URL="https://media.expertomemories.in"
+CLOUDFLARE_R2_BUCKET_NAME="your-bucket-name"
+CLOUDFLARE_R2_PUBLIC_URL="https://media.example.com"
 ```
 
 ---
 
 ## 3. R2 Bucket CORS Configuration
 
-In the Cloudflare Dashboard, navigate to **R2 > Overview > expertomemories-media > Settings > CORS Policy** and apply the following configuration:
+In the Cloudflare Dashboard, navigate to **R2 > Overview > your-bucket-name > Settings > CORS Policy** and apply the following configuration:
 
 ```json
 [

@@ -461,7 +461,7 @@ export function PublishPricingModal({
                       Scan with GPay, PhonePe, Paytm, or BHIM
                     </p>
                     <p className="text-[10px] text-stone-500 mt-0.5">
-                      Payee: <span className="font-medium text-stone-800">{createdOrder.manualUpi?.payeeName || "Experto Memories"}</span>
+                      Payee: <span className="font-medium text-stone-800">{createdOrder.manualUpi?.payeeName || "ExpertoMemories"}</span>
                     </p>
                   </div>
 
@@ -490,15 +490,17 @@ export function PublishPricingModal({
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <code className="font-mono font-bold text-xs sm:text-sm text-[#541D2B] break-all">
-                        {createdOrder.manualUpi?.upiId || "dakshbabbar31@oksbi"}
+                        {createdOrder.manualUpi?.upiId || ""}
                       </code>
                       <button
                         type="button"
                         onClick={() => {
-                          const upi = createdOrder.manualUpi?.upiId || "dakshbabbar31@oksbi";
-                          navigator.clipboard.writeText(upi);
-                          setCopiedUpi(true);
-                          setTimeout(() => setCopiedUpi(false), 2000);
+                          const upi = createdOrder.manualUpi?.upiId || "";
+                          if (upi) {
+                            navigator.clipboard.writeText(upi);
+                            setCopiedUpi(true);
+                            setTimeout(() => setCopiedUpi(false), 2000);
+                          }
                         }}
                         className="px-3 py-1 rounded-xl text-xs font-semibold bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 flex items-center gap-1.5 shrink-0 transition-colors"
                       >

@@ -4,8 +4,8 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { AdminUser } from "@/models/AdminUser";
 import { cookies } from "next/headers";
 
-const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@expertomemories.in";
-const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "apology123";
+const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
+const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 export async function POST(req: Request) {
   try {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       // 3. Initial Admin Bootstrap:
       // If no record exists for DEFAULT_ADMIN_EMAIL, bootstrap the root admin in MongoDB.
       // Environment credentials are used solely to seed the initial database record, never to bypass a database outage.
-      if (!user && cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase()) {
+      if (!user && DEFAULT_ADMIN_EMAIL && cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase() && DEFAULT_ADMIN_PASSWORD) {
         const pwHash = await hashPassword(DEFAULT_ADMIN_PASSWORD);
         user = await AdminUser.create({
           email: cleanEmail,
