@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 350 100% 98%;
+    --foreground: 345 50% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 345 50% 15%;
+
+    --primary: 346 84% 61%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 340 30% 94%;
+    --secondary-foreground: 345 50% 20%;
+
+    --muted: 340 30% 96%;
+    --muted-foreground: 345 20% 45%;
+
+    --accent: 340 70% 92%;
+    --accent-foreground: 345 60% 25%;
+
+    --border: 340 30% 90%;
+    --input: 340 30% 90%;
+    --ring: 346 84% 61%;
+
+    --radius: 1rem;
+  }
+
+  [data-theme="lavender-dreams"] {
+    --background: 270 60% 98%;
+    --foreground: 270 45% 15%;
+    --primary: 271 81% 56%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  [data-theme="peachy-love"] {
+    --background: 30 100% 98%;
+    --foreground: 25 50% 15%;
+    --primary: 24 94% 53%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  [data-theme="midnight-hearts"] {
+    --background: 260 50% 6%;
+    --foreground: 330 100% 96%;
+    --card: 260 40% 10%;
+    --card-foreground: 330 100% 96%;
+    --primary: 330 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --border: 330 30% 20%;
+  }
+}
+
+body {
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(244, 114, 182, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 114, 182, 0.7);
+}
+
+/* =========================================================
+   RESPONSIVE SIMULATED PREVIEW STYLES
+   Ensures narrow mock devices (e.g. 390px mobile frame)
+   render correctly inside desktop browser environments
+   without being broken by window-level CSS media queries.
+   ========================================================= */
+
+.is-mobile-preview {
+  container-type: inline-size;
+}
+
+.is-mobile-preview .grid-cols-1.sm\:grid-cols-2,
+.is-mobile-preview .grid-cols-1.md\:grid-cols-2,
+.is-mobile-preview .grid-cols-1.sm\:grid-cols-3,
+.is-mobile-preview .grid-cols-1.md\:grid-cols-3,
+.is-mobile-preview [class*="sm:grid-cols-2"],
+.is-mobile-preview [class*="md:grid-cols-2"],
+.is-mobile-preview [class*="sm:grid-cols-3"],
+.is-mobile-preview [class*="md:grid-cols-3"] {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  gap: 1.25rem !important;
+}
+
+.is-mobile-preview .w-full.max-w-\[320px\] {
+  max-width: 290px !important;
+}
+
+.is-mobile-preview section {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+/* Prevent any text overflow in preview cards */
+.is-mobile-preview h1,
+.is-mobile-preview h2,
+.is-mobile-preview h3,
+.is-mobile-preview p,
+.is-mobile-preview span {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+

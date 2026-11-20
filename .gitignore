@@ -1,0 +1,61 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing & Local Development Scaffolding
+/coverage
+/scratch
+/screenshots
+/test-screenshots
+test-*.mjs
+scratch-*.mjs
+audit-*.mjs
+investigate-*.mjs
+capture-*.mjs
+migrate-*.mjs
+check-*.mjs
+verify-*.mjs
+09-PRODUCTION-READINESS-AUDIT.md
+
+# Next.js Build Output
+/.next/
+/out/
+
+# Netlify Build Output
+/.netlify/
+
+# Production Build
+/build
+/dist
+
+# Debug Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# Environment Variables & Local Secrets
+# NEVER commit credentials, API keys, or private environment files to GitHub
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Operating System Files
+.DS_Store
+*.pem
+Thumbs.db
+
+# TypeScript Build Cache
+*.tsbuildinfo
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
