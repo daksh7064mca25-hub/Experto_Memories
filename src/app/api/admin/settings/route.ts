@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getPlatformSettings } from "@/models/PlatformSettings";
+import { CatalogueProduct } from "@/models/CatalogueProduct";
+import { CATALOG_PRODUCTS } from "@/config/products";
+import { getEffectivePricing } from "@/lib/pricing";
 import { getAdminSession } from "@/lib/auth";
 import { logAdminAction } from "@/lib/audit";
 
@@ -23,6 +26,7 @@ const SettingsUpdateSchema = z.object({
       qrCodeUrl: z.string().default("/images/upi-qr.jpeg"),
     })
     .optional(),
+  occasionPrices: z.record(z.string(), z.number().min(0)).optional(),
 });
 
 export async function GET(req: Request) {
@@ -34,6 +38,7 @@ export async function GET(req: Request) {
 
     await connectToDatabase();
     const settings = await getPlatformSettings();
+    const { effectivePricing } = await getEffectivePricing();
 
     // Mask sensitive Razorpay info
     const razorpayKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "";
@@ -55,6 +60,8 @@ export async function GET(req: Request) {
         updatedBy: settings.updatedBy,
         updatedAt: settings.updatedAt,
       },
+      occasionPrices: effectivePricing.occasionPrices,
+      productPrices: effectivePricing.products,
       gateways: {
         razorpay: {
           keyId: razorpayKeyId ? `${razorpayKeyId.slice(0, 8)}••••••••` : "Not Configured",
@@ -105,6 +112,34 @@ export async function PUT(req: Request) {
 
     await settings.save();
 
+    // If occasion-specific prices are provided, update CatalogueProduct overrides
+    if (validated.occasionPrices) {
+      for (const [key, price] of Object.entries(validated.occasionPrices)) {
+        const def = CATALOG_PRODUCTS.find(
+          (p) => p.slug.toLowerCase() === key.toLowerCase() || p.occasionType.toLowerCase() === key.toLowerCase() || p.id.toLowerCase() === key.toLowerCase()
+        );
+        if (def) {
+          await CatalogueProduct.findOneAndUpdate(
+            { productId: def.id },
+            {
+              productId: def.id,
+              slug: def.slug,
+              occasionType: def.occasionType,
+              title: def.title,
+              subtitle: def.subtitle || "",
+              price: Number(price),
+              originalPrice: def.originalPrice || Number(price) * 2,
+              isActive: true,
+              description: def.description,
+              features: def.features,
+              demoUrl: def.demoUrl,
+            },
+            { upsert: true, new: true }
+          );
+        }
+      }
+    }
+
     await logAdminAction({
       actor: admin.email,
       action: "UPDATE_PLATFORM_SETTINGS",
@@ -114,9 +149,12 @@ export async function PUT(req: Request) {
         basePrice: settings.basePrice,
         customDomainPrice: settings.customDomainPrice,
         paymentMethodsAllowed: settings.paymentMethodsAllowed,
+        occasionPrices: validated.occasionPrices,
       },
       notes: "Platform pricing and payment gateway configuration updated",
     });
+
+    const { effectivePricing } = await getEffectivePricing();
 
     return NextResponse.json({
       success: true,
@@ -131,6 +169,8 @@ export async function PUT(req: Request) {
         paymentMethodsAllowed: settings.paymentMethodsAllowed,
         manualUpiConfig: settings.manualUpiConfig,
       },
+      occasionPrices: effectivePricing.occasionPrices,
+      productPrices: effectivePricing.products,
     });
   } catch (err: any) {
     if (err.name === "ZodError" || err.issues) {

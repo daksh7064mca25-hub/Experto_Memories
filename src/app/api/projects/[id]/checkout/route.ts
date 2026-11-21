@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { WebsiteProject } from "@/models/WebsiteProject";
 import { Order } from "@/models/Order";
 import { getPlatformSettings } from "@/models/PlatformSettings";
+import { getEffectivePricing } from "@/lib/pricing";
 import { getAdminSession, getCustomerSession, hashPassword } from "@/lib/auth";
 import { createRazorpayOrder, isRazorpayConfigured } from "@/lib/razorpay";
 import { getManualUpiConfig, generateUpiIntentUri } from "@/lib/upi";
@@ -91,11 +92,13 @@ export async function POST(req: Request, context: Context) {
       }
     }
 
-    // 4. Server-Authoritative Price Calculation from PlatformSettings
+    // 4. Server-Authoritative Price Calculation from PlatformSettings & Product Catalog
     const settings = await getPlatformSettings();
-    const basePrice = settings.basePrice || 999;
-    const domainPrice = validated.includeCustomDomain ? settings.customDomainPrice || 1200 : 0;
-    const totalAmount = basePrice + domainPrice;
+    const { productPrice, basePrice, customDomainPrice, effectivePricing } = await getEffectivePricing(
+      project.occasionType || "apology"
+    );
+    const domainPrice = validated.includeCustomDomain ? customDomainPrice : 0;
+    const totalAmount = productPrice + domainPrice;
 
     // 5. Customer contact details
     const customerName =
@@ -160,8 +163,8 @@ export async function POST(req: Request, context: Context) {
         {
           productSlug: project.occasionType || "apology",
           occasionType: project.occasionType || "apology",
-          title: `${project.title} (Digital Gift Website)`,
-          price: basePrice,
+          title: `${project.title} (Digital Celebration Website)`,
+          price: productPrice,
           selectedTheme: project.theme,
         },
       ],
@@ -172,13 +175,23 @@ export async function POST(req: Request, context: Context) {
       orderStatus: "placed",
       projectId: project._id as any,
       packageDetails: {
-        basePrice,
+        productPrice,
+        basePrice: productPrice, // backward compatibility
+        fallbackBasePrice: basePrice,
         isCustomDomain: validated.includeCustomDomain,
         customDomainName: validated.includeCustomDomain ? validated.customDomainName?.toLowerCase() : undefined,
         customDomainPrice: domainPrice,
         isPasswordProtected: validated.isPasswordProtected,
-        hostingDurationMonths: settings.hostingDurationMonths || 12,
-        renewalPolicy: settings.renewalPolicy,
+        hostingDurationMonths: effectivePricing.hostingDurationMonths || settings.hostingDurationMonths || 12,
+        renewalPolicy: effectivePricing.renewalPolicy || settings.renewalPolicy,
+        priceSnapshot: {
+          productPrice,
+          customDomainPrice: domainPrice,
+          totalAmount,
+          currency: "INR",
+          occasionType: project.occasionType,
+          calculatedAt: new Date().toISOString(),
+        },
       },
       razorpayDetails: razorpayOrderId ? { razorpayOrderId } : {},
       accessToken: rawAccessToken,
@@ -244,11 +257,12 @@ export async function POST(req: Request, context: Context) {
       totalAmount,
       currency: "INR",
       breakdown: {
-        basePrice,
+        productPrice,
+        basePrice: productPrice,
         domainPrice,
         totalAmount,
-        hostingDuration: `${settings.hostingDurationMonths || 12} Months`,
-        renewalPolicy: settings.renewalPolicy,
+        hostingDuration: `${effectivePricing.hostingDurationMonths || settings.hostingDurationMonths || 12} Months`,
+        renewalPolicy: effectivePricing.renewalPolicy || settings.renewalPolicy,
       },
       paymentMethod: validated.paymentMethod,
       razorpayOrderId,

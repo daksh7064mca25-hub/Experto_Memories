@@ -9,6 +9,7 @@ import { isRazorpayConfigured, createRazorpayOrder } from "@/lib/razorpay";
 import { getManualUpiConfig, generateUpiIntentUri } from "@/lib/upi";
 import { getCustomerSession } from "@/lib/auth";
 import { getPlatformSettings } from "@/models/PlatformSettings";
+import { getEffectivePricing } from "@/lib/pricing";
 
 const CreateOrderInputSchema = z.object({
   customer: z.object({
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Server-Side Price & Product Calculation (Never trust client price)
+    const { effectivePricing } = await getEffectivePricing();
     let totalAmount = 0;
     const validatedItems = [];
 
@@ -87,15 +89,20 @@ export async function POST(req: Request) {
         );
       }
 
+      const effectiveItemPrice =
+        effectivePricing.occasionPrices[item.productSlug.toLowerCase()] ??
+        effectivePricing.occasionPrices[product.occasionType.toLowerCase()] ??
+        product.price;
+
       const qty = item.quantity || 1;
-      const itemTotal = product.price * qty;
+      const itemTotal = effectiveItemPrice * qty;
       totalAmount += itemTotal;
 
       validatedItems.push({
         productSlug: product.slug,
         occasionType: product.occasionType,
         title: product.title,
-        price: product.price,
+        price: effectiveItemPrice,
         selectedTheme: item.selectedTheme,
         quantity: qty,
       });

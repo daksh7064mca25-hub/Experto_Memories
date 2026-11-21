@@ -40,13 +40,21 @@ export function PublishPricingModal({
   onPaymentSuccess,
 }: PublishPricingModalProps) {
   // Pricing configuration from server
-  const [pricing, setPricing] = useState({
+  const [pricing, setPricing] = useState<{
+    basePrice: number;
+    customDomainPrice: number;
+    currency: string;
+    hostingDurationMonths: number;
+    renewalPolicy: string;
+    occasionPrices?: Record<string, number>;
+  }>({
     basePrice: 999,
     customDomainPrice: 1200,
     currency: "INR",
     hostingDurationMonths: 12,
     renewalPolicy:
       "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly with your registrar.",
+    occasionPrices: {},
   });
 
   // Package Selections
@@ -84,9 +92,30 @@ export function PublishPricingModal({
       .catch(() => {});
   }, []);
 
+  // Resolve product/occasion specific price from server
+  const occasionKey = (project.occasionType || "apology").toLowerCase();
+  const experiencePrice =
+    pricing.occasionPrices?.[occasionKey] ??
+    pricing.occasionPrices?.[project.slug?.toLowerCase() || ""] ??
+    pricing.basePrice ??
+    999;
+
   // Calculate live totals
   const totalAmount =
-    pricing.basePrice + (includeCustomDomain ? pricing.customDomainPrice : 0);
+    experiencePrice + (includeCustomDomain ? pricing.customDomainPrice : 0);
+
+  const occasionDisplayName =
+    project.occasionType === "wedding"
+      ? "Luxury Wedding Invitation Website"
+      : project.occasionType === "anniversary"
+      ? "Anniversary Celebration Website"
+      : project.occasionType === "birthday"
+      ? "Birthday Celebration Website"
+      : project.occasionType === "love"
+      ? "Romantic Love Story Website"
+      : project.occasionType === "apology"
+      ? "Heartfelt Apology & Healing Website"
+      : "Digital Celebration Website";
 
   if (!isOpen) return null;
 
@@ -595,7 +624,7 @@ export function PublishPricingModal({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-serif font-bold text-stone-900 text-sm">
-                        Standard Digital Gift Website
+                        {occasionDisplayName}
                       </span>
                       <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full">
                         Required
@@ -603,15 +632,15 @@ export function PublishPricingModal({
                     </div>
                     <ul className="text-xs text-stone-600 space-y-1 list-disc list-inside">
                       <li>Included: ExpertoMemories hosted URL (e.g. <code>/gift/{project.slug}</code>)</li>
-                      <li>Included: {pricing.hostingDurationMonths} Months high-speed cloud hosting & SSL</li>
-                      <li>Included: Interactive music, photo gallery, love notes & animations</li>
+                      <li>Included: {pricing.hostingDurationMonths} Months high-speed cloud hosting &amp; SSL</li>
+                      <li>Included: Interactive music, photo gallery, personalized notes &amp; animations</li>
                     </ul>
                   </div>
                   <div className="text-right shrink-0">
                     <span className="font-serif font-bold text-lg text-rose-600">
-                      ₹{pricing.basePrice.toLocaleString("en-IN")}
+                      ₹{experiencePrice.toLocaleString("en-IN")}
                     </span>
-                    <p className="text-[10px] text-stone-400">One-time base fee</p>
+                    <p className="text-[10px] text-stone-400">One-time experience fee</p>
                   </div>
                 </div>
 

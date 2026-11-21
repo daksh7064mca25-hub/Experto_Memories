@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Settings,
   Shield,
@@ -16,6 +17,8 @@ import {
   Radio,
   Lock,
   RefreshCw,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 
 export default function StudioSettingsPage() {
@@ -30,6 +33,8 @@ export default function StudioSettingsPage() {
   const [renewalPolicy, setRenewalPolicy] = useState("");
   const [cnameTarget, setCnameTarget] = useState("cname.expertomemories.com");
   const [paymentMethodsAllowed, setPaymentMethodsAllowed] = useState<"both" | "razorpay_only" | "upi_only">("both");
+  const [productPrices, setProductPrices] = useState<any[]>([]);
+  const [occasionPrices, setOccasionPrices] = useState<Record<string, number>>({});
 
   // Manual UPI Settings
   const [bankName, setBankName] = useState("HDFC Bank");
@@ -67,6 +72,13 @@ export default function StudioSettingsPage() {
         if (data.gateways) {
           setGateways(data.gateways);
         }
+
+        if (data.productPrices) {
+          setProductPrices(data.productPrices);
+        }
+        if (data.occasionPrices) {
+          setOccasionPrices(data.occasionPrices);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch admin settings:", err);
@@ -78,6 +90,18 @@ export default function StudioSettingsPage() {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  const handleOccasionPriceChange = (slug: string, newPrice: number) => {
+    setOccasionPrices((prev) => ({
+      ...prev,
+      [slug.toLowerCase()]: newPrice,
+    }));
+    setProductPrices((prev) =>
+      prev.map((p) =>
+        p.slug.toLowerCase() === slug.toLowerCase() ? { ...p, price: newPrice, isCustomPrice: true } : p
+      )
+    );
+  };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +127,7 @@ export default function StudioSettingsPage() {
             displayName,
             qrCodeUrl,
           },
+          occasionPrices,
         }),
         credentials: "include",
       });
@@ -254,6 +279,91 @@ export default function StudioSettingsPage() {
               onChange={(e) => setRenewalPolicy(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-xs focus:ring-2 focus:ring-rose-500"
             />
+          </div>
+
+          {/* Occasion & Product-Specific Pricing Breakdown */}
+          <div className="pt-5 border-t border-stone-100 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-rose-500" />
+                  <span>Occasion &amp; Product Pricing Overrides</span>
+                </h3>
+                <p className="text-[11px] text-stone-500">
+                  Configure custom prices per celebration category. When not overridden, categories inherit the global base price (₹{basePrice}).
+                </p>
+              </div>
+              <Link
+                href="/studio/templates"
+                className="text-xs font-semibold text-rose-600 hover:text-rose-700 inline-flex items-center gap-1 self-start sm:self-auto"
+              >
+                <span>Full Catalog &amp; Features</span>
+                <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-stone-200">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-stone-50 text-[10px] font-mono uppercase text-stone-500 border-b border-stone-200">
+                  <tr>
+                    <th className="py-2.5 px-3">Occasion Category</th>
+                    <th className="py-2.5 px-3">Catalog Slug</th>
+                    <th className="py-2.5 px-3">Active Price (₹ INR)</th>
+                    <th className="py-2.5 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {(productPrices.length > 0
+                    ? productPrices
+                    : [
+                        { id: "prod-wedding", slug: "wedding", title: "The Royal Wedding Invitation", occasionType: "wedding", price: 1499, isCustomPrice: true },
+                        { id: "prod-anniversary", slug: "anniversary", title: "Our Forever Story", occasionType: "anniversary", price: 999, isCustomPrice: false },
+                        { id: "prod-birthday", slug: "birthday", title: "The Birthday Chronicle", occasionType: "birthday", price: 999, isCustomPrice: false },
+                        { id: "prod-love", slug: "love", title: "The Secret World of Us", occasionType: "love", price: 999, isCustomPrice: false },
+                        { id: "prod-apology", slug: "apology", title: "A Little Sorry, A Lot of Love", occasionType: "apology", price: 999, isCustomPrice: false },
+                      ]
+                  ).map((prod) => {
+                    const currentPrice = occasionPrices[prod.slug.toLowerCase()] ?? prod.price ?? basePrice;
+                    const isCustom = prod.isCustomPrice || currentPrice !== basePrice;
+
+                    return (
+                      <tr key={prod.slug} className="hover:bg-stone-50/60 transition-colors">
+                        <td className="py-2.5 px-3">
+                          <span className="font-semibold text-stone-900 block">{prod.title}</span>
+                          <span className="text-[10px] font-mono text-stone-400 uppercase font-bold">{prod.occasionType}</span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-stone-500">
+                          {prod.slug}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-1.5 max-w-[140px]">
+                            <span className="text-stone-400 font-mono text-xs">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={currentPrice}
+                              onChange={(e) => handleOccasionPriceChange(prod.slug, Number(e.target.value))}
+                              className="w-24 px-2 py-1 rounded-lg border border-stone-200 font-mono text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                            />
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {isCustom ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200">
+                              Custom Override
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
+                              Base Fallback (₹{basePrice})
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

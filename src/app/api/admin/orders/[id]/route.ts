@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
+import "@/models/WebsiteProject";
 import { getAdminSession } from "@/lib/auth";
 import { logAdminAction } from "@/lib/audit";
 

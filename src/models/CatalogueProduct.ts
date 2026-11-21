@@ -5,7 +5,7 @@ export interface ICatalogueProductDoc extends Document {
   slug: string;
   title: string;
   subtitle: string;
-  occasionType: "apology" | "anniversary" | "birthday" | "love";
+  occasionType: "apology" | "anniversary" | "birthday" | "love" | "wedding";
   price: number;
   originalPrice?: number;
   badge?: string;
@@ -41,7 +41,7 @@ const CatalogueProductSchema = new Schema<ICatalogueProductDoc>(
     occasionType: {
       type: String,
       required: true,
-      enum: ["apology", "anniversary", "birthday", "love"],
+      enum: ["apology", "anniversary", "birthday", "love", "wedding"],
     },
     price: {
       type: Number,

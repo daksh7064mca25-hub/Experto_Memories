@@ -1,25 +1,16 @@
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import { getPlatformSettings } from "@/models/PlatformSettings";
+import { getEffectivePricing } from "@/lib/pricing";
 
 export async function GET() {
   try {
-    await connectToDatabase();
-    const settings = await getPlatformSettings();
+    const { effectivePricing } = await getEffectivePricing();
     return NextResponse.json({
       success: true,
-      pricing: {
-        basePrice: settings.basePrice,
-        customDomainPrice: settings.customDomainPrice,
-        currency: settings.currency || "INR",
-        hostingDurationMonths: settings.hostingDurationMonths || 12,
-        renewalPolicy: settings.renewalPolicy,
-        cnameTarget: settings.cnameTarget || "cname.expertomemories.com",
-      },
+      pricing: effectivePricing,
     });
   } catch (err: any) {
-    console.error("Failed to fetch platform settings:", err);
-    // Safe fallback
+    console.error("Failed to fetch platform pricing:", err);
+    // Safe fallback preserving existing defaults
     return NextResponse.json({
       success: true,
       pricing: {
@@ -30,6 +21,14 @@ export async function GET() {
         renewalPolicy:
           "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly by you with your domain registrar.",
         cnameTarget: "cname.expertomemories.com",
+        occasionPrices: {
+          anniversary: 999,
+          apology: 999,
+          birthday: 999,
+          love: 999,
+          wedding: 1499,
+        },
+        products: [],
       },
     });
   }

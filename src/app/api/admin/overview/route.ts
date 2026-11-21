@@ -53,13 +53,20 @@ export async function GET(req: Request) {
         { $match: { paymentStatus: "paid" } },
         { $group: { _id: null, netRevenue: { $sum: "$totalAmount" } } },
       ]),
-      Order.countDocuments({ paymentStatus: "pending" }),
+      Order.countDocuments({
+        paymentStatus: { $in: ["pending", "payment_pending_verification"] },
+      }),
       Order.countDocuments({ paymentStatus: "paid" }),
       Order.countDocuments({ paymentStatus: "refunded" }),
       Order.countDocuments({
-        paymentMethod: { $in: ["upi", "manual_upi"] },
-        paymentStatus: "pending",
-        "manualUpiDetails.utrNumber": { $exists: true, $ne: "" },
+        $or: [
+          { paymentStatus: "payment_pending_verification" },
+          {
+            paymentMethod: { $in: ["upi", "manual_upi"] },
+            paymentStatus: "pending",
+            "manualUpiDetails.utrNumber": { $exists: true, $ne: "" },
+          },
+        ],
       } as any),
       WebsiteProject.countDocuments(),
       WebsiteProject.countDocuments({ status: "published" }),

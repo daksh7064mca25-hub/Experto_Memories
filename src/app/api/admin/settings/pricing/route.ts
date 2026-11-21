@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getPlatformSettings } from "@/models/PlatformSettings";
+import { CatalogueProduct } from "@/models/CatalogueProduct";
+import { CATALOG_PRODUCTS } from "@/config/products";
+import { getEffectivePricing } from "@/lib/pricing";
 import { getAdminSession } from "@/lib/auth";
 
 const UpdatePricingSchema = z.object({
@@ -11,6 +14,7 @@ const UpdatePricingSchema = z.object({
   hostingDurationMonths: z.number().min(1).default(12),
   renewalPolicy: z.string().min(5),
   cnameTarget: z.string().min(3).default("cname.expertomemories.com"),
+  occasionPrices: z.record(z.string(), z.number().min(0)).optional(),
 });
 
 export async function PUT(req: Request) {
@@ -36,6 +40,38 @@ export async function PUT(req: Request) {
 
     await settings.save();
 
+    if (validated.occasionPrices) {
+      for (const [key, price] of Object.entries(validated.occasionPrices)) {
+        const def = CATALOG_PRODUCTS.find(
+          (p) =>
+            p.slug.toLowerCase() === key.toLowerCase() ||
+            p.occasionType.toLowerCase() === key.toLowerCase() ||
+            p.id.toLowerCase() === key.toLowerCase()
+        );
+        if (def) {
+          await CatalogueProduct.findOneAndUpdate(
+            { productId: def.id },
+            {
+              productId: def.id,
+              slug: def.slug,
+              occasionType: def.occasionType,
+              title: def.title,
+              subtitle: def.subtitle || "",
+              price: Number(price),
+              originalPrice: def.originalPrice || Number(price) * 2,
+              isActive: true,
+              description: def.description,
+              features: def.features,
+              demoUrl: def.demoUrl,
+            },
+            { upsert: true, new: true }
+          );
+        }
+      }
+    }
+
+    const { effectivePricing } = await getEffectivePricing();
+
     return NextResponse.json({
       success: true,
       pricing: {
@@ -45,6 +81,8 @@ export async function PUT(req: Request) {
         hostingDurationMonths: settings.hostingDurationMonths,
         renewalPolicy: settings.renewalPolicy,
         cnameTarget: settings.cnameTarget,
+        occasionPrices: effectivePricing.occasionPrices,
+        products: effectivePricing.products,
       },
     });
   } catch (err: any) {

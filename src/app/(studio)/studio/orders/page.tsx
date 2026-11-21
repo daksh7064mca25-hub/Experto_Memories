@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ShoppingBag,
   Clock,
@@ -19,19 +19,43 @@ import {
   CreditCard,
   QrCode,
   RefreshCw,
+  X,
+  AlertCircle,
 } from "lucide-react";
 
-export default function StudioOrdersPage() {
+interface OrderCounts {
+  all: number;
+  needsVerification: number;
+  paid: number;
+  refunded: number;
+  pending: number;
+  failed: number;
+}
+
+function StudioOrdersContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams?.get("paymentStatus") || "all";
+
   const [orders, setOrders] = useState<any[]>([]);
+  const [counts, setCounts] = useState<OrderCounts>({
+    all: 0,
+    needsVerification: 0,
+    paid: 0,
+    refunded: 0,
+    pending: 0,
+    failed: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
   const [methodFilter, setMethodFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("paymentStatus", statusFilter);
       if (methodFilter !== "all") params.set("paymentMethod", methodFilter);
@@ -42,12 +66,21 @@ export default function StudioOrdersPage() {
         router.push("/admin/login");
         return;
       }
+
       const data = await res.json();
-      if (res.ok && data.orders) {
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch orders");
+      }
+
+      if (data.orders) {
         setOrders(data.orders);
       }
-    } catch (err) {
+      if (data.counts) {
+        setCounts(data.counts);
+      }
+    } catch (err: any) {
       console.error("Failed to fetch admin orders:", err);
+      setError(err.message || "Network error loading orders. Please check database connection and retry.");
     } finally {
       setLoading(false);
     }
@@ -62,12 +95,35 @@ export default function StudioOrdersPage() {
     fetchOrders();
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    // Immediate refetch without search filter
+    setTimeout(() => {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.set("paymentStatus", statusFilter);
+      if (methodFilter !== "all") params.set("paymentMethod", methodFilter);
+      fetch(`/api/admin/orders?${params.toString()}`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.orders) setOrders(d.orders);
+          if (d.counts) setCounts(d.counts);
+        })
+        .catch(() => {});
+    }, 10);
+  };
+
   const renderPaymentBadge = (status: string) => {
     switch (status) {
       case "paid":
         return (
           <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">
             <CheckCircle2 size={10} /> Paid
+          </span>
+        );
+      case "payment_pending_verification":
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-bold animate-pulse">
+            <Clock size={10} /> Needs Verification
           </span>
         );
       case "refunded":
@@ -79,13 +135,13 @@ export default function StudioOrdersPage() {
       case "pending":
         return (
           <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-bold">
-            <Clock size={10} /> Pending
+            <Clock size={10} /> Payment Pending
           </span>
         );
       case "failed":
         return (
           <span className="inline-flex items-center gap-1 text-[10px] bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full font-bold">
-            <AlertTriangle size={10} /> Failed
+            <AlertTriangle size={10} /> Failed / Rejected
           </span>
         );
       default:
@@ -96,6 +152,20 @@ export default function StudioOrdersPage() {
         );
     }
   };
+
+  const tabs: { id: string; label: string; count?: number; highlight?: boolean }[] = [
+    { id: "all", label: "All Orders", count: counts.all },
+    {
+      id: "payment_pending_verification",
+      label: "Needs UPI Verification",
+      count: counts.needsVerification,
+      highlight: counts.needsVerification > 0,
+    },
+    { id: "paid", label: "Paid", count: counts.paid },
+    { id: "refunded", label: "Refunded", count: counts.refunded },
+    { id: "pending", label: "Payment Pending", count: counts.pending },
+    { id: "failed", label: "Failed / Rejected", count: counts.failed },
+  ];
 
   return (
     <div className="space-y-8 font-sans">
@@ -118,7 +188,7 @@ export default function StudioOrdersPage() {
           onClick={fetchOrders}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 shadow-sm transition-colors self-start sm:self-auto"
         >
-          <RefreshCw size={13} />
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
           <span>Refresh</span>
         </button>
       </div>
@@ -129,11 +199,20 @@ export default function StudioOrdersPage() {
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             type="text"
-            placeholder="Search order #, customer name, email, phone, UTR..."
+            placeholder="Search order #, customer name, email, phone, UTR, or MongoDB ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-stone-50/50"
+            className="w-full pl-9 pr-9 py-2 rounded-xl border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-stone-50/50"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+            >
+              <X size={14} />
+            </button>
+          )}
         </form>
 
         <div className="flex items-center gap-2">
@@ -152,30 +231,58 @@ export default function StudioOrdersPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs with Counts */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-200/80 text-xs font-semibold">
-        {[
-          { id: "all", label: "All Orders" },
-          { id: "payment_pending_verification", label: "Needs UPI Verification" },
-          { id: "paid", label: "Paid" },
-          { id: "refunded", label: "Refunded" },
-          { id: "pending", label: "Payment Pending" },
-          { id: "failed", label: "Failed / Rejected" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setStatusFilter(tab.id)}
-            className={`px-3.5 py-1.5 rounded-full transition-all whitespace-nowrap ${
-              statusFilter === tab.id
-                ? "bg-stone-900 text-white shadow-sm"
-                : "bg-stone-100 hover:bg-stone-200 text-stone-600"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const isActive = statusFilter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setStatusFilter(tab.id)}
+              className={`px-3.5 py-1.5 rounded-full transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                isActive
+                  ? "bg-stone-900 text-white shadow-sm"
+                  : tab.highlight
+                  ? "bg-amber-100 text-amber-900 hover:bg-amber-200"
+                  : "bg-stone-100 hover:bg-stone-200 text-stone-600"
+              }`}
+            >
+              <span>{tab.label}</span>
+              {typeof tab.count === "number" && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                    isActive
+                      ? "bg-stone-700 text-white"
+                      : tab.highlight
+                      ? "bg-amber-200 text-amber-950"
+                      : "bg-stone-200 text-stone-700"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Error State Banner */}
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-2xl flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={18} className="text-rose-600 shrink-0" />
+            <p><strong>Error loading orders:</strong> {error}</p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchOrders}
+            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shrink-0 shadow-sm"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Orders List Table */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
@@ -188,6 +295,15 @@ export default function StudioOrdersPage() {
           <div className="p-12 text-center text-stone-400">
             <ShoppingBag size={32} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm font-medium">No customer orders found matching criteria.</p>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="mt-2 text-xs text-rose-600 hover:underline font-semibold"
+              >
+                Clear search query
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -209,9 +325,10 @@ export default function StudioOrdersPage() {
                 {orders.map((ord) => {
                   const item = ord.items?.[0];
                   const isNeedsVerification =
-                    ord.paymentMethod === "manual_upi" &&
-                    ord.paymentStatus === "pending" &&
-                    Boolean(ord.manualUpiDetails?.utrNumber);
+                    ord.paymentStatus === "payment_pending_verification" ||
+                    (ord.paymentMethod === "manual_upi" &&
+                      ord.paymentStatus === "pending" &&
+                      Boolean(ord.manualUpiDetails?.utrNumber));
 
                   return (
                     <tr key={ord._id} className="hover:bg-stone-50/80 transition-colors">
@@ -226,14 +343,14 @@ export default function StudioOrdersPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="font-medium text-stone-800 block truncate max-w-xs">
-                          {item?.title || "Digital Gift Website"}
+                          {item?.title || ord.projectId?.title || "Digital Celebration Website"}
                         </span>
                         <span className="text-[10px] uppercase font-mono font-bold text-rose-700">
-                          {item?.occasionType || "Custom"}
+                          {item?.occasionType || ord.projectId?.occasionType || "Custom"}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 font-serif font-bold text-sm text-stone-900">
-                        ₹{ord.totalAmount}
+                        ₹{ord.totalAmount?.toLocaleString("en-IN") || ord.totalAmount}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-[11px]">
                         {ord.paymentMethod === "razorpay" ? (
@@ -281,5 +398,20 @@ export default function StudioOrdersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function StudioOrdersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-16 text-center text-stone-500">
+          <Loader2 size={32} className="animate-spin text-rose-600 mx-auto mb-2" />
+          <p className="text-xs">Loading customer orders...</p>
+        </div>
+      }
+    >
+      <StudioOrdersContent />
+    </Suspense>
   );
 }
