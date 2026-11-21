@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import {
   Heart,
   ArrowLeft,
@@ -39,12 +39,33 @@ interface UploadedMedia {
 export default function PersonalizePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params?: Promise<{ id: string }> | { id: string };
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const resolvedParams = use(params);
-  const orderId = resolvedParams.id;
+  const routeParams = useParams();
+
+  let idFromProps = "";
+  if (params) {
+    if (typeof (params as any).then === "function") {
+      try {
+        const resolved = use(params as Promise<{ id: string }>);
+        if (resolved && resolved.id) idFromProps = resolved.id;
+      } catch {}
+    } else if (typeof params === "object" && (params as any).id) {
+      idFromProps = (params as any).id;
+    }
+  }
+
+  const orderId =
+    idFromProps ||
+    (typeof routeParams?.id === "string"
+      ? routeParams.id
+      : Array.isArray(routeParams?.id)
+      ? routeParams.id[0]
+      : "") ||
+    "";
+
   const token = searchParams.get("token") || "";
 
   const [loading, setLoading] = useState(true);

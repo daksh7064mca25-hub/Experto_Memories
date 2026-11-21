@@ -1,18 +1,41 @@
 "use client";
 
 import { use, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params?: Promise<{ id: string }> | { id: string };
 }
 
 export default function StudioEditorLegacyRedirect({ params }: Props) {
   const router = useRouter();
-  const { id } = use(params);
+  const routeParams = useParams();
+
+  let idFromProps = "";
+  if (params) {
+    if (typeof (params as any).then === "function") {
+      try {
+        const resolved = use(params as Promise<{ id: string }>);
+        if (resolved && resolved.id) idFromProps = resolved.id;
+      } catch {}
+    } else if (typeof params === "object" && (params as any).id) {
+      idFromProps = (params as any).id;
+    }
+  }
+
+  const id =
+    idFromProps ||
+    (typeof routeParams?.id === "string"
+      ? routeParams.id
+      : Array.isArray(routeParams?.id)
+      ? routeParams.id[0]
+      : "") ||
+    "";
 
   useEffect(() => {
-    router.replace(`/editor/${id}`);
+    if (id) {
+      router.replace(`/editor/${id}`);
+    }
   }, [id, router]);
 
   return (

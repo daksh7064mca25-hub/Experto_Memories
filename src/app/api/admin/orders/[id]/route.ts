@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
 import { getAdminSession } from "@/lib/auth";
 import { logAdminAction } from "@/lib/audit";
 
 interface Context {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }> | { id: string };
 }
 
 export async function GET(req: Request, context: Context) {
@@ -15,19 +16,43 @@ export async function GET(req: Request, context: Context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await context.params;
+    const resolvedParams = await context.params;
+    const id = resolvedParams?.id;
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    }
+
     await connectToDatabase();
 
-    const order = await Order.findById(id).populate("projectId").lean();
+    let order = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id).populate("projectId").lean();
+    }
+    if (!order) {
+      order = await Order.findOne({ orderNumber: id }).populate("projectId").lean();
+    }
+
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
+
+    const populatedProject = order.projectId && typeof order.projectId === "object" ? (order.projectId as any) : null;
+    const projectIdString = populatedProject ? populatedProject._id.toString() : (order.projectId ? order.projectId.toString() : undefined);
 
     return NextResponse.json({
       success: true,
       order: {
         ...(order as any),
         _id: (order as any)._id.toString(),
+        projectId: projectIdString,
+        projectDetails: populatedProject ? {
+          _id: populatedProject._id.toString(),
+          slug: populatedProject.slug,
+          title: populatedProject.title,
+          occasion: populatedProject.occasion,
+          status: populatedProject.status,
+          customDomain: populatedProject.customDomain,
+        } : null,
       },
     });
   } catch (error: any) {
@@ -43,12 +68,25 @@ export async function PATCH(req: Request, context: Context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await context.params;
+    const resolvedParams = await context.params;
+    const id = resolvedParams?.id;
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    }
+
     const body = await req.json();
     const { orderStatus, paymentStatus, note, refundReason, suspendWebsite } = body;
 
     await connectToDatabase();
-    const order = await Order.findById(id);
+
+    let order = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({ orderNumber: id });
+    }
+
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }

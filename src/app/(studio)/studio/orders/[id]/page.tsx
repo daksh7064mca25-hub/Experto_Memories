@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -25,17 +25,42 @@ import {
   Music,
   Image as ImageIcon,
   RotateCcw,
+  ExternalLink,
 } from "lucide-react";
 import type { OrderData, OrderItem, AuditTrailEntry, PaymentStatus, OrderStatus } from "@/types/order";
 
 export default function AdminOrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params?: Promise<{ id: string }> | { id: string };
 }) {
   const router = useRouter();
-  const resolvedParams = use(params);
-  const orderId = resolvedParams.id;
+  const routeParams = useParams();
+
+  // Bulletproof parameter resolution:
+  // Handles plain object (Netlify), Promise (Next.js SSR), or useParams hook
+  let idFromProps = "";
+  if (params) {
+    if (typeof (params as any).then === "function") {
+      try {
+        const resolved = use(params as Promise<{ id: string }>);
+        if (resolved && resolved.id) idFromProps = resolved.id;
+      } catch {
+        // Fallback to useParams
+      }
+    } else if (typeof params === "object" && (params as any).id) {
+      idFromProps = (params as any).id;
+    }
+  }
+
+  const orderId =
+    idFromProps ||
+    (typeof routeParams?.id === "string"
+      ? routeParams.id
+      : Array.isArray(routeParams?.id)
+      ? routeParams.id[0]
+      : "") ||
+    "";
 
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +75,12 @@ export default function AdminOrderDetailPage({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("placed");
 
   const fetchOrder = async () => {
+    if (!orderId) {
+      setLoading(false);
+      setError("No order ID provided in URL");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -77,7 +108,9 @@ export default function AdminOrderDetailPage({
   };
 
   useEffect(() => {
-    fetchOrder();
+    if (orderId) {
+      fetchOrder();
+    }
   }, [orderId]);
 
   const handleVerifyUpi = async () => {
@@ -283,6 +316,15 @@ export default function AdminOrderDetailPage({
     );
   }
 
+  const projectIdStr =
+    typeof order.projectId === "object" && order.projectId !== null
+      ? (order.projectId as any)._id?.toString() || ""
+      : (typeof order.projectId === "string" ? order.projectId : "");
+
+  const projectDetails =
+    (order as any).projectDetails ||
+    (typeof order.projectId === "object" && order.projectId !== null ? order.projectId : null);
+
   return (
     <div className="max-w-6xl mx-auto p-6 md:p-10 space-y-8">
       {/* Top Header */}
@@ -306,9 +348,9 @@ export default function AdminOrderDetailPage({
         </div>
 
         {/* Quick Project Editor Action if project exists */}
-        {order.projectId && (
+        {projectIdStr && (
           <Link
-            href={`/studio/editor/${order.projectId}`}
+            href={`/editor/${projectIdStr}`}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold text-xs shadow-md shadow-rose-300/40 hover:opacity-95 transition-opacity"
           >
             <Edit3 size={15} /> Open in Project Editor
@@ -363,6 +405,41 @@ export default function AdminOrderDetailPage({
               </button>
             </div>
           </div>
+
+          {order.manualUpiDetails?.screenshotUrl && (
+            <div className="bg-amber-100/50 p-4 rounded-xl border border-amber-200/80">
+              <span className="text-[11px] font-bold text-amber-950 block mb-2">
+                Customer Uploaded Payment Receipt / Screenshot:
+              </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <a
+                  href={order.manualUpiDetails.screenshotUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block rounded-lg overflow-hidden border border-amber-300 shadow-sm max-w-[240px] hover:opacity-90 transition-opacity bg-white"
+                >
+                  <img
+                    src={order.manualUpiDetails.screenshotUrl}
+                    alt="Payment receipt proof"
+                    className="max-h-48 w-auto object-contain"
+                  />
+                </a>
+                <div className="space-y-1">
+                  <a
+                    href={order.manualUpiDetails.screenshotUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 text-xs font-semibold hover:bg-amber-50 transition-colors"
+                  >
+                    <ExternalLink size={13} /> View Full-Resolution Receipt
+                  </a>
+                  <p className="text-[11px] text-amber-800/80">
+                    Verify that the amount, payee name, and timestamp on this receipt match your business account.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -378,29 +455,37 @@ export default function AdminOrderDetailPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3 rounded-xl bg-rose-50/50">
                 <span className="text-rose-600 block text-[10px] uppercase font-mono">Full Name</span>
-                <span className="font-semibold text-rose-950 text-sm">{order.customer.name}</span>
+                <span className="font-semibold text-rose-950 text-sm">{order.customer?.name || "N/A"}</span>
               </div>
               <div className="p-3 rounded-xl bg-rose-50/50">
                 <span className="text-rose-600 block text-[10px] uppercase font-mono">Email Address</span>
-                <a
-                  href={`mailto:${order.customer.email}`}
-                  className="font-semibold text-rose-950 text-sm flex items-center gap-1.5 hover:underline"
-                >
-                  <Mail size={13} className="text-rose-500" /> {order.customer.email}
-                </a>
+                {order.customer?.email ? (
+                  <a
+                    href={`mailto:${order.customer.email}`}
+                    className="font-semibold text-rose-950 text-sm flex items-center gap-1.5 hover:underline"
+                  >
+                    <Mail size={13} className="text-rose-500" /> {order.customer.email}
+                  </a>
+                ) : (
+                  <span className="font-semibold text-rose-950 text-sm">N/A</span>
+                )}
               </div>
               <div className="p-3 rounded-xl bg-rose-50/50">
                 <span className="text-rose-600 block text-[10px] uppercase font-mono">Phone Number</span>
-                <a
-                  href={`tel:${order.customer.phone}`}
-                  className="font-semibold text-rose-950 text-sm flex items-center gap-1.5 hover:underline"
-                >
-                  <Phone size={13} className="text-rose-500" /> {order.customer.phone}
-                </a>
+                {order.customer?.phone ? (
+                  <a
+                    href={`tel:${order.customer.phone}`}
+                    className="font-semibold text-rose-950 text-sm flex items-center gap-1.5 hover:underline"
+                  >
+                    <Phone size={13} className="text-rose-500" /> {order.customer.phone}
+                  </a>
+                ) : (
+                  <span className="font-semibold text-rose-950 text-sm">N/A</span>
+                )}
               </div>
               <div className="p-3 rounded-xl bg-rose-50/50">
                 <span className="text-rose-600 block text-[10px] uppercase font-mono">Status</span>
-                <span className="font-medium text-rose-900 capitalize">{order.orderStatus}</span>
+                <span className="font-medium text-rose-900 capitalize">{order.orderStatus || "placed"}</span>
               </div>
             </div>
           </div>
@@ -408,10 +493,10 @@ export default function AdminOrderDetailPage({
           {/* Purchased Items Card */}
           <div className="bg-white rounded-2xl p-6 border border-rose-200/80 shadow-sm space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-rose-950 flex items-center gap-2">
-              <Layers size={16} className="text-rose-500" /> Ordered Items ({order.items.length})
+              <Layers size={16} className="text-rose-500" /> Ordered Items ({(order.items || []).length})
             </h3>
             <div className="space-y-3">
-              {order.items.map((item: OrderItem, idx: number) => (
+              {(order.items || []).map((item: OrderItem, idx: number) => (
                 <div
                   key={idx}
                   className="p-4 rounded-xl border border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-rose-50/20"
@@ -447,15 +532,21 @@ export default function AdminOrderDetailPage({
               <Sparkles size={16} className="text-rose-500" /> Website Project Link
             </h3>
 
-            {order.projectId ? (
+            {projectIdStr ? (
               <div className="p-4 rounded-xl bg-pink-50/60 border border-pink-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <span className="text-[10px] uppercase font-mono tracking-wider text-rose-600 block">Project ID</span>
-                  <span className="font-mono text-xs font-semibold text-rose-950 block">{order.projectId}</span>
+                  <span className="font-mono text-xs font-semibold text-rose-950 block">{projectIdStr}</span>
+                  {projectDetails?.title && (
+                    <span className="text-xs text-rose-800 font-serif block mt-0.5">{projectDetails.title}</span>
+                  )}
+                  {projectDetails?.slug && (
+                    <span className="text-[11px] text-rose-600/80 font-mono block mt-0.5">/gift/{projectDetails.slug}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/studio/editor/${order.projectId}`}
+                    href={`/editor/${projectIdStr}`}
                     className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium text-xs hover:bg-rose-700 transition-colors flex items-center gap-1.5"
                   >
                     <Edit3 size={14} /> Open Editor
@@ -475,7 +566,7 @@ export default function AdminOrderDetailPage({
               <h3 className="text-sm font-bold uppercase tracking-wider text-rose-950 flex items-center gap-2">
                 <FileText size={16} className="text-rose-500" /> Customer Personalization & Memories
               </h3>
-              {order.projectId && (
+              {projectIdStr && (
                 <button
                   type="button"
                   disabled={actionLoading}
@@ -609,16 +700,28 @@ export default function AdminOrderDetailPage({
                   )}
                   {order.manualUpiDetails?.screenshotUrl && (
                     <div className="pt-2">
-                      <span className="text-[10px] uppercase font-mono tracking-wider text-rose-600 block mb-1">
-                        Attached Screenshot
+                      <span className="text-[10px] uppercase font-mono tracking-wider text-rose-600 block mb-1.5">
+                        Attached Receipt Proof
                       </span>
                       <a
                         href={order.manualUpiDetails.screenshotUrl}
                         target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-rose-600 hover:underline font-semibold"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg overflow-hidden border border-rose-200 max-w-[200px] mb-1.5 hover:opacity-90 transition-opacity bg-stone-50"
                       >
-                        <FileText size={14} /> View Uploaded Screenshot
+                        <img
+                          src={order.manualUpiDetails.screenshotUrl}
+                          alt="Payment receipt proof"
+                          className="max-h-36 w-auto object-contain mx-auto"
+                        />
+                      </a>
+                      <a
+                        href={order.manualUpiDetails.screenshotUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:underline font-semibold"
+                      >
+                        <ExternalLink size={13} /> View Full Size Proof
                       </a>
                     </div>
                   )}
@@ -819,7 +922,7 @@ export default function AdminOrderDetailPage({
               />
             </div>
 
-            {order.projectId && (
+            {projectIdStr && (
               <label className="flex items-start gap-2.5 cursor-pointer text-xs text-stone-700 select-none">
                 <input
                   type="checkbox"

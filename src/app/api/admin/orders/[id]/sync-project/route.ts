@@ -1,23 +1,37 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
 import { getAdminSession } from "@/lib/auth";
 import { syncPersonalizationToProject } from "@/services/personalization-sync.service";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+interface Context {
+  params: Promise<{ id: string }> | { id: string };
+}
+
+export async function POST(req: Request, context: Context) {
   try {
     const session = await getAdminSession(req);
     if (!session || session.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized. Admin session required." }, { status: 401 });
     }
 
-    const { id } = await params;
+    const resolvedParams = await context.params;
+    const id = resolvedParams?.id;
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    }
+
     await connectToDatabase();
 
-    const order = await Order.findById(id);
+    let order = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({ orderNumber: id });
+    }
+
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }

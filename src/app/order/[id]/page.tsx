@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import {
   Heart,
   CheckCircle2,
@@ -19,11 +19,31 @@ import {
 } from "lucide-react";
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params?: Promise<{ id: string }> | { id: string };
 }
 
 export default function OrderStatusPage({ params }: Props) {
-  const { id } = use(params);
+  const routeParams = useParams();
+  let idFromProps = "";
+  if (params) {
+    if (typeof (params as any).then === "function") {
+      try {
+        const resolved = use(params as Promise<{ id: string }>);
+        if (resolved && resolved.id) idFromProps = resolved.id;
+      } catch {}
+    } else if (typeof params === "object" && (params as any).id) {
+      idFromProps = (params as any).id;
+    }
+  }
+  const id =
+    idFromProps ||
+    (typeof routeParams?.id === "string"
+      ? routeParams.id
+      : Array.isArray(routeParams?.id)
+      ? routeParams.id[0]
+      : "") ||
+    "";
+
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
 
