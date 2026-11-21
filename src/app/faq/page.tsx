@@ -122,7 +122,7 @@ export default function FaqPage() {
                     </div>
                     <div>
                       <h4 className="font-serif font-bold text-xs text-[#211715]">
-                        Flat ₹999 When Publishing
+                        Transparent One-Time Publishing Fee
                       </h4>
                       <p className="text-[11px] text-[#78716C] leading-relaxed">
                         One single fee with zero recurring subscriptions or hidden costs.

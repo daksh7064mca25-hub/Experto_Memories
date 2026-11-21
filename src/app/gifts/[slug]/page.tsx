@@ -5,6 +5,7 @@ import {
   getProductBySlug,
   CATALOG_PRODUCTS,
 } from "@/config/products";
+import { getEffectivePricing } from "@/lib/pricing";
 import {
   Heart,
   Sparkles,
@@ -18,6 +19,9 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -27,12 +31,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
 };
-
-export async function generateStaticParams() {
-  return CATALOG_PRODUCTS.map((product) => ({
-    slug: product.slug,
-  }));
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -59,6 +57,22 @@ export default async function ProductDetailsPage({ params }: Props) {
 
   if (!product) {
     notFound();
+  }
+
+  let displayPrice = product.price;
+  let originalPrice = product.originalPrice;
+
+  try {
+    const { productPrice, effectivePricing } = await getEffectivePricing(slug);
+    const pricingInfo = effectivePricing.products.find(
+      (p) =>
+        p.slug.toLowerCase() === slug.toLowerCase() ||
+        p.occasionType.toLowerCase() === product.occasionType.toLowerCase()
+    );
+    displayPrice = pricingInfo?.price ?? productPrice ?? product.price;
+    originalPrice = pricingInfo?.originalPrice ?? product.originalPrice;
+  } catch (err) {
+    console.error("Error fetching effective pricing for product slug:", slug, err);
   }
 
   return (
@@ -188,9 +202,9 @@ export default async function ProductDetailsPage({ params }: Props) {
             <div className="rounded-2xl bg-white border border-stone-200 p-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-3xl font-bold text-stone-900">{`₹${product.price}`}</span>
-                  {product.originalPrice && (
-                    <span className="text-sm text-stone-400 line-through font-mono">{`₹${product.originalPrice}`}</span>
+                  <span className="font-serif text-3xl font-bold text-stone-900">{`₹${displayPrice}`}</span>
+                  {originalPrice && originalPrice > displayPrice && (
+                    <span className="text-sm text-stone-400 line-through font-mono">{`₹${originalPrice}`}</span>
                   )}
                   <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                     Free Customization &amp; Preview Included

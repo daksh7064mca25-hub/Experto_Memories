@@ -959,7 +959,7 @@ export default function CustomerDashboardPage() {
                                 className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#9C2D41] to-[#D94B70] hover:from-[#802234] hover:to-[#C03E60] text-white font-serif font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-[#D94B70]/20 transition-all hover:scale-[1.01]"
                               >
                                 <Sparkles size={14} />
-                                <span>Publish &amp; Pay to Share (₹999)</span>
+                                <span>Publish &amp; Pay to Share</span>
                               </button>
                             )}
 

@@ -37,6 +37,54 @@ export default function ExpertoMemoriesStorefront() {
     "letters" | "polaroids" | "soundtrack" | "scratch" | "timeline" | "games" | "vault" | "security"
   >("letters");
 
+  // Dynamic Storefront Pricing from Authoritative Engine
+  const [pricing, setPricing] = useState<{
+    basePrice: number;
+    occasionPrices: Record<string, number>;
+    products: Array<{ slug: string; occasionType: string; price: number; originalPrice?: number }>;
+  }>({
+    basePrice: 999,
+    occasionPrices: {
+      anniversary: 299,
+      apology: 349,
+      birthday: 351,
+      love: 349,
+      wedding: 999,
+    },
+    products: [],
+  });
+
+  useEffect(() => {
+    fetch("/api/settings/pricing", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.pricing) setPricing(d.pricing);
+      })
+      .catch(() => {});
+  }, []);
+
+  const getOccasionPricing = (occasionOrSlug: string, fallbackPrice = 999, fallbackOriginal = 1999) => {
+    const key = occasionOrSlug.toLowerCase();
+    const activePrice = pricing.occasionPrices?.[key] ?? fallbackPrice;
+    const prodMatch = pricing.products?.find(
+      (p) => p.slug.toLowerCase() === key || p.occasionType.toLowerCase() === key
+    );
+    const originalPrice = prodMatch?.originalPrice ?? fallbackOriginal;
+    return {
+      price: activePrice,
+      originalPrice: originalPrice > activePrice ? originalPrice : null,
+    };
+  };
+
+  const activePrices = Object.values(pricing.occasionPrices || {}).filter((p) => typeof p === "number" && p > 0);
+  const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : 299;
+
+  const apologyPricing = getOccasionPricing("apology", 349, 1999);
+  const anniversaryPricing = getOccasionPricing("anniversary", 299, 1999);
+  const birthdayPricing = getOccasionPricing("birthday", 351, 1799);
+  const lovePricing = getOccasionPricing("love", 349, 1799);
+  const weddingPricing = getOccasionPricing("wedding", 999, 2999);
+
   // Track window scroll for sticky header transition
   useEffect(() => {
     const handleScroll = () => {
@@ -649,7 +697,12 @@ export default function ExpertoMemoriesStorefront() {
                   Apology Experience
                 </span>
                 <span className="font-serif font-bold text-base text-[#211715]">
-                  ₹999 <span className="text-xs text-stone-400 line-through font-normal">₹1,999</span>
+                  ₹{apologyPricing.price.toLocaleString("en-IN")}{" "}
+                  {apologyPricing.originalPrice && (
+                    <span className="text-xs text-stone-400 line-through font-normal">
+                      ₹{apologyPricing.originalPrice.toLocaleString("en-IN")}
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -713,7 +766,12 @@ export default function ExpertoMemoriesStorefront() {
                   Anniversary Experience
                 </span>
                 <span className="font-serif font-bold text-base text-[#211715]">
-                  ₹999 <span className="text-xs text-stone-400 line-through font-normal">₹1,999</span>
+                  ₹{anniversaryPricing.price.toLocaleString("en-IN")}{" "}
+                  {anniversaryPricing.originalPrice && (
+                    <span className="text-xs text-stone-400 line-through font-normal">
+                      ₹{anniversaryPricing.originalPrice.toLocaleString("en-IN")}
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -777,7 +835,12 @@ export default function ExpertoMemoriesStorefront() {
                   Birthday Experience
                 </span>
                 <span className="font-serif font-bold text-base text-[#211715]">
-                  ₹999 <span className="text-xs text-stone-400 line-through font-normal">₹1,799</span>
+                  ₹{birthdayPricing.price.toLocaleString("en-IN")}{" "}
+                  {birthdayPricing.originalPrice && (
+                    <span className="text-xs text-stone-400 line-through font-normal">
+                      ₹{birthdayPricing.originalPrice.toLocaleString("en-IN")}
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -841,7 +904,12 @@ export default function ExpertoMemoriesStorefront() {
                   Love &amp; Romance
                 </span>
                 <span className="font-serif font-bold text-base text-[#211715]">
-                  ₹999 <span className="text-xs text-stone-400 line-through font-normal">₹1,799</span>
+                  ₹{lovePricing.price.toLocaleString("en-IN")}{" "}
+                  {lovePricing.originalPrice && (
+                    <span className="text-xs text-stone-400 line-through font-normal">
+                      ₹{lovePricing.originalPrice.toLocaleString("en-IN")}
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -905,7 +973,12 @@ export default function ExpertoMemoriesStorefront() {
                   Royal Wedding Collection &bull; 10 Traditions
                 </span>
                 <span className="font-serif font-bold text-base text-[#FAF7F2]">
-                  ₹999 <span className="text-xs text-stone-400 line-through font-normal">₹2,499</span>
+                  ₹{weddingPricing.price}
+                  {weddingPricing.originalPrice && weddingPricing.originalPrice > weddingPricing.price && (
+                    <span className="text-xs text-stone-400 line-through font-normal ml-1.5">
+                      ₹{weddingPricing.originalPrice}
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -1199,7 +1272,7 @@ export default function ExpertoMemoriesStorefront() {
               Publish &amp; Share
             </h3>
             <p className="text-xs text-[#57534E] leading-relaxed">
-              Complete your ₹999 publishing payment securely and receive your permanent link with 1-click WhatsApp delivery and a printable gift QR card.
+              Complete your one-time publishing payment securely (from ₹{minPrice}) and receive your permanent link with 1-click WhatsApp delivery and a printable gift QR card.
             </p>
           </div>
         </div>
@@ -1401,7 +1474,7 @@ export default function ExpertoMemoriesStorefront() {
                 Single All-Inclusive Fee
               </h3>
               <p className="text-xs text-[#57534E] leading-relaxed">
-                Flat ₹999 when you choose to publish. Never any hidden recurring subscriptions or unexpected add-on costs.
+                Starting from ₹{minPrice} when you choose to publish. Never any hidden recurring subscriptions or unexpected add-on costs.
               </p>
             </div>
 
@@ -1521,7 +1594,7 @@ export default function ExpertoMemoriesStorefront() {
                     </div>
                     <div>
                       <h4 className="font-serif font-bold text-xs text-[#211715]">
-                        Flat ₹999 When Publishing
+                        Starting from ₹{minPrice} When Publishing
                       </h4>
                       <p className="text-[11px] text-[#78716C] leading-relaxed">
                         One single fee with zero recurring subscriptions or hidden costs.
@@ -1631,7 +1704,7 @@ export default function ExpertoMemoriesStorefront() {
                 Crafting bespoke interactive digital gift websites that turn feelings, photographs, and memories into unforgettable keepsakes.
               </p>
               <div className="text-[11px] text-[#78716C]">
-                ₹999 per published website. Includes 12 months cloud hosting.
+                From ₹{minPrice} per published website. Includes 12 months cloud hosting.
               </div>
             </div>
 

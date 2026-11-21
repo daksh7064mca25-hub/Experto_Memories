@@ -495,8 +495,7 @@ export default function CustomerVisualEditorPage({ params }: Props) {
             ) : (
               <>
                 <Sparkles size={12} />
-                <span className="hidden xs:inline">Publish &amp; Pay</span>
-                <span>(₹999)</span>
+                <span>Publish &amp; Pay</span>
               </>
             )}
           </button>

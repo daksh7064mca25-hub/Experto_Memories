@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { CATALOGUE_TEMPLATES } from "@/config/catalog";
+import { getEffectivePricing } from "@/lib/pricing";
 import {
   Sparkles,
   ArrowRight,
@@ -11,6 +12,9 @@ import {
   Mail,
   Ticket,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Personalized Digital Gifts | ExpertoMemories Studio",
@@ -23,10 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function GiftsDiscoveryPage() {
+export default async function GiftsDiscoveryPage() {
   const giftTemplates = CATALOGUE_TEMPLATES.filter(
     (t) => t.categoryId === "digital-gifts" && t.isActive
   );
+
+  let occasionPrices: Record<string, number> = {};
+  let productsPricing: any[] = [];
+  try {
+    const { effectivePricing } = await getEffectivePricing();
+    occasionPrices = effectivePricing.occasionPrices || {};
+    productsPricing = effectivePricing.products || [];
+  } catch (err) {
+    console.error("Error loading effective pricing for gifts page:", err);
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-stone-900 selection:bg-[#541D2B] selection:text-white font-sans">
@@ -134,19 +148,30 @@ export default function GiftsDiscoveryPage() {
 
               {/* Price & Action Row */}
               <div className="p-6 pt-4 flex items-center justify-between gap-3 bg-white">
-                <div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="font-serif text-xl font-bold text-stone-900">
-                      ₹{template.price}
-                    </span>
-                    <span className="text-xs text-stone-400 line-through">
-                      ₹{template.originalPrice}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-emerald-700 font-semibold">
-                    1 Year Free Hosting Included
-                  </span>
-                </div>
+                {(() => {
+                  const pricingInfo = productsPricing.find(
+                    (p) => p.slug === template.slug || p.occasionType === template.occasionType
+                  );
+                  const displayPrice = pricingInfo?.price ?? occasionPrices[template.occasionType] ?? template.price;
+                  const originalPrice = pricingInfo?.originalPrice ?? template.originalPrice;
+                  return (
+                    <div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="font-serif text-xl font-bold text-stone-900">
+                          ₹{displayPrice}
+                        </span>
+                        {originalPrice && originalPrice > displayPrice && (
+                          <span className="text-xs text-stone-400 line-through">
+                            ₹{originalPrice}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-emerald-700 font-semibold">
+                        1 Year Free Hosting Included
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 <div className="flex items-center gap-2">
                   <Link
