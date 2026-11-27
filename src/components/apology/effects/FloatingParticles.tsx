@@ -39,7 +39,9 @@ export function FloatingParticles({ theme }: { theme: ThemeId }) {
       opacity: Math.random() * 0.4 + 0.25,
     }));
 
-    setParticles(items);
+    requestAnimationFrame(() => {
+      setParticles(items);
+    });
   }, [theme]);
 
   return (

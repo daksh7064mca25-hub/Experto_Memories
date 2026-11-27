@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   X,
   CreditCard,
@@ -17,6 +18,8 @@ import {
   Info,
   Smartphone,
   AlertCircle,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { WebsiteProjectData } from "@/types/website";
 
@@ -47,6 +50,8 @@ export function PublishPricingModal({
     hostingDurationMonths: number;
     renewalPolicy: string;
     occasionPrices?: Record<string, number>;
+    paymentMethodsAllowed?: "both" | "razorpay_only" | "upi_only";
+    manualUpiConfig?: any;
   }>({
     basePrice: 999,
     customDomainPrice: 1200,
@@ -55,6 +60,7 @@ export function PublishPricingModal({
     renewalPolicy:
       "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly with your registrar.",
     occasionPrices: {},
+    paymentMethodsAllowed: "both",
   });
 
   // Package Selections
@@ -72,7 +78,8 @@ export function PublishPricingModal({
   const [submittingMsg, setSubmittingMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Post-Payment / Manual UPI Confirmation
+  // Router & Post-Payment / Manual UPI Confirmation
+  const router = useRouter();
   const [createdOrder, setCreatedOrder] = useState<any | null>(null);
   const [utrNumber, setUtrNumber] = useState("");
   const [isSubmittingUtr, setIsSubmittingUtr] = useState(false);
@@ -82,12 +89,47 @@ export function PublishPricingModal({
   const [publishCompleteUrl, setPublishCompleteUrl] = useState<string | null>(null);
   const [copiedPublishUrl, setCopiedPublishUrl] = useState(false);
 
+  // Submitted UPI Receipt & Auto-redirect state
+  const [submittedUpiReceipt, setSubmittedUpiReceipt] = useState<{
+    orderId: string;
+    orderNumber: string;
+    totalAmount: number;
+    utrNumber: string;
+    paymentStatus: string;
+    submittedAt?: string;
+    accessToken?: string;
+  } | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [isRedirectPaused, setIsRedirectPaused] = useState(false);
+  const [copiedReceiptUtr, setCopiedReceiptUtr] = useState(false);
+
+  // Optional and visible auto-redirect countdown to Dashboard Home
+  useEffect(() => {
+    if (redirectCountdown === null || isRedirectPaused) return;
+    if (redirectCountdown <= 0) {
+      router.push("/dashboard");
+      onClose();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, isRedirectPaused, router, onClose]);
+
   // Fetch server pricing
   useEffect(() => {
     fetch("/api/settings/pricing")
       .then((r) => r.json())
       .then((d) => {
-        if (d.pricing) setPricing(d.pricing);
+        if (d.pricing) {
+          setPricing(d.pricing);
+          if (d.pricing.paymentMethodsAllowed === "upi_only") {
+            setPaymentMethod("manual_upi");
+          } else if (d.pricing.paymentMethodsAllowed === "razorpay_only") {
+            setPaymentMethod("razorpay");
+          }
+        }
       })
       .catch(() => {});
   }, []);
@@ -330,6 +372,8 @@ export function PublishPricingModal({
       return;
     }
 
+    if (isSubmittingUtr) return; // Prevent double submit
+
     setIsSubmittingUtr(true);
     setErrorMsg("");
 
@@ -346,10 +390,16 @@ export function PublishPricingModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(
-          "UPI Reference submitted! Our admin team will verify your transfer and unlock your published website shortly."
-        );
-        onClose();
+        setSubmittedUpiReceipt({
+          orderId: data.orderId || createdOrder.orderId,
+          orderNumber: data.orderNumber || createdOrder.orderNumber,
+          totalAmount: data.totalAmount || createdOrder.totalAmount,
+          utrNumber: data.utrNumber || utrNumber.trim(),
+          paymentStatus: data.paymentStatus || "payment_pending_verification",
+          submittedAt: data.submittedAt || new Date().toISOString(),
+          accessToken: createdOrder.accessToken,
+        });
+        setRedirectCountdown(5);
       } else {
         setErrorMsg(data.error || "Failed to submit UTR number.");
       }
@@ -361,15 +411,15 @@ export function PublishPricingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in font-sans">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-gradient-to-r from-rose-50/50 via-white to-pink-50/30">
+        <div className="p-4 sm:p-6 border-b border-stone-100 flex items-center justify-between bg-gradient-to-r from-rose-50/50 via-white to-pink-50/30">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 bg-rose-100/70 px-2.5 py-0.5 rounded-full inline-block mb-1">
-              Publishing & Pricing
+              Publishing &amp; Pricing
             </span>
-            <h2 className="font-serif text-2xl font-bold text-stone-900">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
               Publish &quot;{project.title}&quot; Live
             </h2>
           </div>
@@ -383,7 +433,7 @@ export function PublishPricingModal({
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
           {publishCompleteUrl ? (
             /* SUCCESS SCREEN AFTER PUBLISHING */
             <div className="text-center py-6 space-y-4">
@@ -430,10 +480,187 @@ export function PublishPricingModal({
                 </a>
                 <button
                   type="button"
+                  onClick={() => {
+                    router.push("/dashboard");
+                    onClose();
+                  }}
+                  className="px-6 py-3 rounded-full text-xs font-serif font-bold bg-[#211715] hover:bg-black text-white shadow-md transition-colors cursor-pointer"
+                >
+                  Go to My Dashboard
+                </button>
+                <button
+                  type="button"
                   onClick={onClose}
-                  className="px-6 py-3 rounded-full text-xs font-semibold text-stone-600 hover:bg-stone-100"
+                  className="px-5 py-3 rounded-full text-xs font-semibold text-stone-600 hover:bg-stone-100 cursor-pointer"
                 >
                   Done
+                </button>
+              </div>
+            </div>
+          ) : submittedUpiReceipt ? (
+            /* PAYMENT REFERENCE SUBMITTED CONFIRMATION SCREEN */
+            <div className="text-center py-4 space-y-6 animate-fade-in font-sans">
+              {/* Animated Status Icon */}
+              <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-amber-200/50 animate-ping opacity-30" />
+                <div className="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-300 text-amber-700 flex items-center justify-center shadow-md shadow-amber-200/50">
+                  <Clock size={32} className="stroke-[2.2]" />
+                </div>
+              </div>
+
+              {/* Header Titles */}
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100/80 border border-amber-300/70 text-amber-900 text-[11px] font-mono font-bold">
+                  <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
+                  ORDER #{submittedUpiReceipt.orderNumber}
+                </div>
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+                  Your Payment Reference Has Been Received!
+                </h3>
+                <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
+                  Thank you for choosing ExpertoMemories. Your payment reference is now awaiting verification by our team.
+                </p>
+              </div>
+
+              {/* Receipt Summary Card */}
+              <div className="bg-[#FAF7F2] p-4 sm:p-5 rounded-2xl border border-[#C5A36A]/30 max-w-lg mx-auto text-left shadow-xs space-y-3.5">
+                <div className="flex items-center justify-between pb-3 border-b border-stone-200/70">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-stone-400 block font-semibold">
+                      Digital Keepsake Gift
+                    </span>
+                    <span className="font-serif font-bold text-sm text-[#211715]">
+                      {project.title}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    Pending Verification
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-stone-400 block font-semibold">
+                      Amount Transferred
+                    </span>
+                    <span className="font-serif font-bold text-base text-stone-900">
+                      ₹{submittedUpiReceipt.totalAmount?.toLocaleString("en-IN") || submittedUpiReceipt.totalAmount}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-stone-400 block font-semibold">
+                      Payment Method
+                    </span>
+                    <span className="font-semibold text-stone-800">Manual UPI Transfer</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white border border-stone-200/80 flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="overflow-hidden">
+                    <span className="text-[9px] font-mono uppercase text-stone-400 block font-semibold">
+                      Submitted UPI UTR / Reference
+                    </span>
+                    <span className="font-mono text-xs sm:text-sm font-bold text-[#541D2B] tracking-wider truncate block">
+                      {submittedUpiReceipt.utrNumber}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(submittedUpiReceipt.utrNumber);
+                      setCopiedReceiptUtr(true);
+                      setTimeout(() => setCopiedReceiptUtr(false), 2000);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-600 text-xs font-semibold border border-stone-200 flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
+                  >
+                    {copiedReceiptUtr ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                    <span>{copiedReceiptUtr ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-mono text-stone-500 pt-1">
+                  <span>Submission Time:</span>
+                  <span>
+                    {submittedUpiReceipt.submittedAt
+                      ? new Date(submittedUpiReceipt.submittedAt).toLocaleString("en-IN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })
+                      : "Recently submitted"}
+                  </span>
+                </div>
+
+                <div className="pt-2 text-[11px] text-stone-600 leading-relaxed border-t border-stone-200/70">
+                  💡 Your gift is safely saved in your account. Our team will verify the payment against the bank records. You can track the status from your dashboard.
+                </div>
+              </div>
+
+              {/* Optional & Visible Auto-redirect Countdown */}
+              {redirectCountdown !== null && (
+                <div className="max-w-lg mx-auto flex items-center justify-between px-3.5 py-2 rounded-xl bg-stone-100/90 border border-stone-200 text-xs text-stone-600">
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-stone-500 shrink-0" />
+                    <span>
+                      {isRedirectPaused ? (
+                        <span className="text-stone-700 font-medium">Auto-redirect paused.</span>
+                      ) : (
+                        <span>
+                          Redirecting to dashboard in <strong className="text-stone-900 font-mono">{redirectCountdown}s</strong>...
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRedirectPaused(!isRedirectPaused)}
+                    className="text-[11px] font-semibold text-[#9C2D41] hover:underline cursor-pointer"
+                  >
+                    {isRedirectPaused ? "Resume Redirect" : "Pause Redirect"}
+                  </button>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-lg mx-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRedirectPaused(true);
+                    router.push("/dashboard");
+                    onClose();
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 rounded-full font-serif font-bold text-xs bg-[#541D2B] hover:bg-[#3D141F] text-white shadow-md shadow-[#541D2B]/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] cursor-pointer"
+                >
+                  <span>Go to My Home</span>
+                  <ArrowRight size={14} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRedirectPaused(true);
+                    const dest = `/order/${submittedUpiReceipt.orderId}${
+                      submittedUpiReceipt.accessToken ? `?token=${submittedUpiReceipt.accessToken}` : ""
+                    }`;
+                    router.push(dest);
+                    onClose();
+                  }}
+                  className="w-full sm:w-auto px-5 py-3 rounded-full font-serif font-semibold text-xs bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 shadow-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <span>View Order Details</span>
+                  <ExternalLink size={13} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRedirectPaused(true);
+                    onClose();
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 text-xs text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+                >
+                  Close &amp; Stay in Editor
                 </button>
               </div>
             </div>
@@ -799,54 +1026,58 @@ export function PublishPricingModal({
               {/* Payment Method Selector */}
               <div className="pt-2">
                 <p className="text-xs font-bold text-stone-800 mb-2">Select Payment Method</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label
-                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === "razorpay"
-                        ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
-                        : "border-stone-200 hover:border-stone-300 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <input
-                        type="radio"
-                        name="payMethod"
-                        value="razorpay"
-                        checked={paymentMethod === "razorpay"}
-                        onChange={() => setPaymentMethod("razorpay")}
-                        className="accent-rose-600"
-                      />
-                      <div>
-                        <p className="font-serif font-bold text-xs text-stone-900">Online Gateway</p>
-                        <p className="text-[10px] text-stone-500">Cards, UPI, Netbanking</p>
+                <div className={`grid gap-3 ${pricing.paymentMethodsAllowed === "both" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                  {pricing.paymentMethodsAllowed !== "upi_only" && (
+                    <label
+                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                        paymentMethod === "razorpay"
+                          ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
+                          : "border-stone-200 hover:border-stone-300 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="radio"
+                          name="payMethod"
+                          value="razorpay"
+                          checked={paymentMethod === "razorpay"}
+                          onChange={() => setPaymentMethod("razorpay")}
+                          className="accent-rose-600"
+                        />
+                        <div>
+                          <p className="font-serif font-bold text-xs text-stone-900">Online Gateway</p>
+                          <p className="text-[10px] text-stone-500">Cards, UPI, Netbanking</p>
+                        </div>
                       </div>
-                    </div>
-                    <CreditCard size={18} className="text-stone-400" />
-                  </label>
+                      <CreditCard size={18} className="text-stone-400" />
+                    </label>
+                  )}
 
-                  <label
-                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === "manual_upi"
-                        ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
-                        : "border-stone-200 hover:border-stone-300 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <input
-                        type="radio"
-                        name="payMethod"
-                        value="manual_upi"
-                        checked={paymentMethod === "manual_upi"}
-                        onChange={() => setPaymentMethod("manual_upi")}
-                        className="accent-rose-600"
-                      />
-                      <div>
-                        <p className="font-serif font-bold text-xs text-stone-900">Direct UPI Transfer</p>
-                        <p className="text-[10px] text-stone-500">GPay, PhonePe, Paytm QR</p>
+                  {pricing.paymentMethodsAllowed !== "razorpay_only" && (
+                    <label
+                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                        paymentMethod === "manual_upi"
+                          ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
+                          : "border-stone-200 hover:border-stone-300 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="radio"
+                          name="payMethod"
+                          value="manual_upi"
+                          checked={paymentMethod === "manual_upi"}
+                          onChange={() => setPaymentMethod("manual_upi")}
+                          className="accent-rose-600"
+                        />
+                        <div>
+                          <p className="font-serif font-bold text-xs text-stone-900">Direct UPI Transfer</p>
+                          <p className="text-[10px] text-stone-500">GPay, PhonePe, Paytm QR</p>
+                        </div>
                       </div>
-                    </div>
-                    <QrCode size={18} className="text-stone-400" />
-                  </label>
+                      <QrCode size={18} className="text-stone-400" />
+                    </label>
+                  )}
                 </div>
               </div>
 

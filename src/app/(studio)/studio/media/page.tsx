@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -61,7 +61,7 @@ export default function MediaLibraryPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/media/upload", {
@@ -87,11 +87,13 @@ export default function MediaLibraryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    fetchMedia();
-  }, []);
+    Promise.resolve().then(() => {
+      fetchMedia();
+    });
+  }, [fetchMedia]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

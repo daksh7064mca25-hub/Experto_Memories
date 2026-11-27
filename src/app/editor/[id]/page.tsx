@@ -30,6 +30,7 @@ import {
   Layers,
   Loader2,
   ShieldCheck,
+  RotateCcw,
 } from "lucide-react";
 import { WebsiteProjectData, WebsiteSectionData, ThemeId } from "@/types/website";
 import { THEMES } from "@/config/themes";
@@ -48,6 +49,45 @@ import { WeddingSectionControls } from "@/components/studio/editor/WeddingSectio
 import { PublishPricingModal } from "@/components/commerce/PublishPricingModal";
 import { MediaUploader } from "@/components/studio/editor/MediaUploader";
 
+class CanvasErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Canvas render error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center bg-white rounded-2xl border border-rose-200 shadow-sm max-w-md mx-auto my-12">
+          <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
+            <Sparkles size={24} />
+          </div>
+          <h4 className="font-serif font-bold text-stone-900 text-sm mb-1">Preview Canvas Notice</h4>
+          <p className="text-xs text-stone-500 mb-4">
+            {this.state.error?.message || "There was a display issue rendering this canvas preview."}
+          </p>
+          <button
+            type="button"
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-4 py-2 rounded-xl text-xs font-serif font-bold bg-rose-600 text-white hover:bg-rose-700 transition"
+          >
+            Retry Canvas Preview
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 interface Props {
   params?: Promise<{ id: string }> | { id: string };
 }
@@ -59,10 +99,8 @@ export default function CustomerVisualEditorPage({ params }: Props) {
   let idFromProps = "";
   if (params) {
     if (typeof (params as any).then === "function") {
-      try {
-        const resolved = use(params as Promise<{ id: string }>);
-        if (resolved && resolved.id) idFromProps = resolved.id;
-      } catch {}
+      const resolved = use(params as Promise<{ id: string }>);
+      if (resolved && resolved.id) idFromProps = resolved.id;
     } else if (typeof params === "object" && (params as any).id) {
       idFromProps = (params as any).id;
     }
@@ -78,6 +116,7 @@ export default function CustomerVisualEditorPage({ params }: Props) {
     "";
 
   const [project, setProject] = useState<WebsiteProjectData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [viewport, setViewport] = useState<"mobile" | "desktop">("mobile");
   const [activeEditorTab, setActiveEditorTab] = useState<
@@ -88,8 +127,12 @@ export default function CustomerVisualEditorPage({ params }: Props) {
   const [mobileViewMode, setMobileViewMode] = useState<"preview" | "customize">("preview");
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isOpeningPreviewActive, setIsOpeningPreviewActive] = useState(false);
+  const [openingPreviewKey, setOpeningPreviewKey] = useState(0);
+  const [openingPreviewViewport, setOpeningPreviewViewport] = useState<"mobile" | "desktop">("mobile");
 
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const canvasScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Protection against accidental navigation while changes are unsaved or saving
   useEffect(() => {
@@ -103,25 +146,57 @@ export default function CustomerVisualEditorPage({ params }: Props) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [saveStatus]);
 
+  // Listen to custom event for opening animation testing from child section controls
+  useEffect(() => {
+    const handlePreviewOpening = () => setIsOpeningPreviewActive(true);
+    window.addEventListener("preview-opening", handlePreviewOpening);
+    return () => window.removeEventListener("preview-opening", handlePreviewOpening);
+  }, []);
+
   // Fetch initial project
   useEffect(() => {
     const load = async () => {
       try {
+        setLoadError(null);
         const res = await fetch(`/api/projects/${id}`, { credentials: "include" });
         if (res.status === 401) {
           router.push(`/customer/login?redirect=/editor/${id}`);
           return;
         }
         const data = await res.json();
-        if (data.project) {
-          setProject(data.project);
+        if (!res.ok || !data.project) {
+          setLoadError(data.error || "Could not load this website project.");
+          return;
+        }
+        setProject(data.project);
+        if (data.project.sections && data.project.sections.length > 0) {
+          setSelectedSectionId((prev) => prev || data.project.sections[0].id);
         }
       } catch (err) {
         console.error("Failed to load project:", err);
+        setLoadError("Network error loading website project. Please retry.");
       }
     };
     load();
   }, [id, router]);
+
+  const scrollSectionIntoView = (sectionId: string) => {
+    try {
+      const container = canvasScrollRef.current;
+      if (!container) return;
+      const target =
+        container.querySelector(`#${sectionId}`) ||
+        container.querySelector(`[data-section-id="${sectionId}"]`) ||
+        container.querySelector(
+          `[data-section-type="${sectionId.replace(/^sec-/, "").replace(/-/g, "_")}"]`
+        );
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } catch {
+      // Safe fallback
+    }
+  };
 
   // Debounced autosave
   const triggerAutosave = (updatedProj: WebsiteProjectData) => {
@@ -320,6 +395,32 @@ export default function CustomerVisualEditorPage({ params }: Props) {
     window.open(whatsappUrl, "_blank");
   };
 
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-rose-50/40 p-6 font-sans">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200 shadow-lg text-center space-y-4">
+          <h2 className="font-serif text-xl font-bold text-stone-900">Unable to Open Studio</h2>
+          <p className="text-xs text-stone-600">{loadError}</p>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Link
+              href="/dashboard"
+              className="px-4 py-2 rounded-full bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors"
+            >
+              Back to Dashboard
+            </Link>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-full border border-stone-300 text-stone-700 text-xs font-semibold hover:bg-stone-50 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!project) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-rose-50/40 text-rose-500 font-serif">
@@ -458,6 +559,18 @@ export default function CustomerVisualEditorPage({ params }: Props) {
               </button>
             </>
           )}
+
+          {/* Live Opening Experience Preview Button */}
+          <button
+            type="button"
+            onClick={() => setIsOpeningPreviewActive(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-serif font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-sm transition-all hover:scale-[1.02]"
+            title="Experience authentic opening animation, 3D temple gates, and background audio"
+          >
+            <Sparkles size={13} className="text-amber-100 animate-pulse" />
+            <span className="hidden sm:inline">Preview Opening 🎬</span>
+            <span className="sm:hidden">Opening 🎬</span>
+          </button>
 
           {/* External Preview Link */}
           <a
@@ -631,6 +744,12 @@ export default function CustomerVisualEditorPage({ params }: Props) {
               <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
                 {project.sections.map((sec, idx) => {
                   const isSelected = selectedSectionId === sec.id;
+                  const displayTitle =
+                    sec.title?.trim() ||
+                    sec.type
+                      .replace(/^wedding_|^birthday_|^love_|^anniversary_|^apology_/, "")
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase());
                   return (
                     <div
                       key={sec.id}
@@ -638,6 +757,7 @@ export default function CustomerVisualEditorPage({ params }: Props) {
                       onClick={() => {
                         setSelectedSectionId(sec.id);
                         if (window.innerWidth < 1024) setMobileViewMode("customize");
+                        scrollSectionIntoView(sec.id);
                       }}
                       className={`group relative p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                         isSelected
@@ -661,7 +781,7 @@ export default function CustomerVisualEditorPage({ params }: Props) {
                               isSelected ? "font-bold text-rose-950" : "font-medium text-stone-800"
                             }`}
                           >
-                            {sec.title}
+                            {displayTitle}
                           </p>
                           <p className="text-[9px] font-mono text-stone-400 uppercase tracking-wider">
                             {sec.type}
@@ -1089,9 +1209,9 @@ export default function CustomerVisualEditorPage({ params }: Props) {
           }`}
         >
           <div
-            className={`transition-all duration-300 bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden relative flex flex-col ${
+            className={`transition-all duration-300 bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-stone-200 overflow-hidden relative flex flex-col ${
               viewport === "mobile"
-                ? "w-full max-w-[390px] min-h-[780px] is-mobile-preview"
+                ? "w-full max-w-[390px] min-h-[720px] sm:min-h-[780px] is-mobile-preview"
                 : "w-full min-h-[900px] max-w-5xl"
             }`}
           >
@@ -1103,18 +1223,20 @@ export default function CustomerVisualEditorPage({ params }: Props) {
             )}
 
             {/* Embedded Live Renderer with previewMode=true */}
-            <div className="flex-1 w-full bg-[#FAF5F0] overflow-y-auto relative">
-              {project.occasionType === "wedding" ? (
-                <WeddingRenderer project={project} previewMode={true} />
-              ) : project.occasionType === "birthday" ? (
-                <BirthdayRenderer project={project} previewMode={true} />
-              ) : project.occasionType === "love" ? (
-                <LoveRenderer project={project} previewMode={true} />
-              ) : project.occasionType === "anniversary" ? (
-                <AnniversaryRenderer project={project} previewMode={true} />
-              ) : (
-                <ApologyRenderer project={project} previewMode={true} />
-              )}
+            <div ref={canvasScrollRef} className="flex-1 w-full bg-[#FAF5F0] overflow-y-auto relative">
+              <CanvasErrorBoundary>
+                {project.occasionType === "wedding" ? (
+                  <WeddingRenderer project={project} previewMode={true} />
+                ) : project.occasionType === "birthday" ? (
+                  <BirthdayRenderer project={project} previewMode={true} />
+                ) : project.occasionType === "love" ? (
+                  <LoveRenderer project={project} previewMode={true} viewport={viewport} />
+                ) : project.occasionType === "anniversary" ? (
+                  <AnniversaryRenderer project={project} previewMode={true} />
+                ) : (
+                  <ApologyRenderer project={project} previewMode={true} />
+                )}
+              </CanvasErrorBoundary>
             </div>
           </div>
         </main>
@@ -1258,6 +1380,94 @@ export default function CustomerVisualEditorPage({ params }: Props) {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. LIVE OPENING CEREMONY PREVIEW MODAL */}
+      {isOpeningPreviewActive && (
+        <div className="fixed inset-0 z-[100] bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-6 animate-fadeIn">
+          {/* Top Control Bar */}
+          <div className="w-full max-w-4xl bg-stone-900 border border-stone-800 rounded-2xl px-4 py-3 flex items-center justify-between mb-3 text-white shadow-xl shrink-0 relative z-30">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-400 font-serif font-bold text-sm">🎬 Invitation Opening Preview</span>
+              <span className="text-[10px] text-stone-400 hidden sm:inline">
+                (Experience authentic interactive animations &amp; audio)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Viewport switch */}
+              <div className="hidden sm:flex bg-stone-800 rounded-xl p-0.5 border border-stone-700">
+                <button
+                  type="button"
+                  data-modal-viewport="mobile"
+                  onClick={() => setOpeningPreviewViewport("mobile")}
+                  className={`px-2.5 py-1 text-xs rounded-lg font-serif transition ${
+                    openingPreviewViewport === "mobile"
+                      ? "bg-amber-500 text-white font-bold"
+                      : "text-stone-400 hover:text-white"
+                  }`}
+                >
+                  <Smartphone size={13} className="inline mr-1" /> Mobile
+                </button>
+                <button
+                  type="button"
+                  data-modal-viewport="desktop"
+                  onClick={() => setOpeningPreviewViewport("desktop")}
+                  className={`px-2.5 py-1 text-xs rounded-lg font-serif transition ${
+                    openingPreviewViewport === "desktop"
+                      ? "bg-amber-500 text-white font-bold"
+                      : "text-stone-400 hover:text-white"
+                  }`}
+                >
+                  <Monitor size={13} className="inline mr-1" /> Desktop
+                </button>
+              </div>
+
+              {/* Replay Opening */}
+              <button
+                type="button"
+                onClick={() => setOpeningPreviewKey((k) => k + 1)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-serif font-semibold bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/30 transition shadow-xs"
+                title="Replay opening sequence from the start"
+              >
+                <RotateCcw size={13} />
+                <span>Replay Opening</span>
+              </button>
+
+              {/* Exit Preview */}
+              <button
+                type="button"
+                onClick={() => setIsOpeningPreviewActive(false)}
+                className="px-3 py-1.5 rounded-xl text-xs font-serif font-bold bg-rose-600 hover:bg-rose-700 text-white transition shadow-sm"
+              >
+                Exit Preview ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Preview Canvas */}
+          <div
+            className={`transition-all duration-300 bg-[#FAF5F0] rounded-2xl sm:rounded-3xl border border-stone-800 overflow-hidden relative shadow-2xl flex flex-col [transform:translateZ(0)] ${
+              openingPreviewViewport === "mobile"
+                ? "w-full max-w-[400px] h-[85vh] max-h-[820px]"
+                : "w-full max-w-5xl h-[85vh]"
+            }`}
+          >
+            <div className="flex-1 w-full h-full overflow-y-auto relative">
+              {project.occasionType === "wedding" ? (
+                <WeddingRenderer key={openingPreviewKey} project={project} previewMode={false} />
+              ) : project.occasionType === "birthday" ? (
+                <BirthdayRenderer key={openingPreviewKey} project={project} previewMode={false} />
+              ) : project.occasionType === "love" ? (
+                <LoveRenderer key={openingPreviewKey} project={project} previewMode={false} viewport={openingPreviewViewport} />
+              ) : project.occasionType === "anniversary" ? (
+                <AnniversaryRenderer key={openingPreviewKey} project={project} previewMode={false} />
+              ) : (
+                <ApologyRenderer key={openingPreviewKey} project={project} previewMode={false} />
+              )}
             </div>
           </div>
         </div>

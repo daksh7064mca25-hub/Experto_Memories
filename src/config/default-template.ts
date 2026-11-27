@@ -224,6 +224,7 @@ export const DEFAULT_SECTIONS: WebsiteSectionData[] = [
     config: {
       headline: "Your Apology Coupon Book",
       subtext: "Non-expiring vouchers redeemable anytime. Just tap to redeem!",
+      maxRedemptions: 2,
       coupons: [
         {
           id: "coupon-1",

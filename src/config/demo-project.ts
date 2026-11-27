@@ -224,6 +224,7 @@ export const DEMO_SECTIONS: WebsiteSectionData[] = [
     config: {
       headline: "Your Apology Coupon Book",
       subtext: "Non-expiring vouchers redeemable anytime. Just tap to redeem!",
+      maxRedemptions: 2,
       coupons: [
         {
           id: "demo-coupon-1",

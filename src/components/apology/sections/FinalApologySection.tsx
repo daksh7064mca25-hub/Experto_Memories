@@ -141,11 +141,6 @@ export function FinalApologySection({ config, senderName, theme }: Props) {
         )}
       </div>
 
-      {/* Footer Branding */}
-      <div className="mt-12 text-center text-xs opacity-70">
-        <p className="font-serif">Made with love via ExpertoMemories</p>
-        <p className="font-sans text-[10px] mt-0.5">&ldquo;A Little Sorry, A Lot of Love&rdquo;</p>
-      </div>
     </section>
   );
 }

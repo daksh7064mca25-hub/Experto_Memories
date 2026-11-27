@@ -17,6 +17,7 @@ import { CouponBookSection } from "./sections/CouponBookSection";
 import { CatchLoveGameSection } from "./sections/CatchLoveGameSection";
 import { SecretHeartSection } from "./sections/SecretHeartSection";
 import { FinalApologySection } from "./sections/FinalApologySection";
+import { ExpertoMemoriesBrandSignature } from "@/components/common/ExpertoMemoriesBrandSignature";
 
 interface Props {
   project: WebsiteProjectData;
@@ -31,6 +32,17 @@ export function ApologyRenderer({ project, previewMode = false }: Props) {
   const activeSections = (project.sections || [])
     .filter((sec) => sec.enabled)
     .sort((a, b) => a.order - b.order);
+
+  const hasReadyCheck = activeSections.some((sec) => sec.type === "ready_check");
+
+  // Interaction state: if ready check section exists, wait for acceptance; otherwise start writing
+  const [letterStatus, setLetterStatus] = React.useState<"waiting" | "writing" | "completed">(
+    hasReadyCheck && !previewMode ? "waiting" : "writing"
+  );
+
+  const handleReadyCheckAccept = React.useCallback(() => {
+    setLetterStatus((prev) => (prev === "waiting" ? "writing" : prev));
+  }, []);
 
   const renderSection = (sec: (typeof activeSections)[0]) => {
     switch (sec.type as SectionType) {
@@ -50,6 +62,7 @@ export function ApologyRenderer({ project, previewMode = false }: Props) {
             key={sec.id}
             config={sec.config as any}
             theme={theme}
+            onAccept={handleReadyCheckAccept}
           />
         );
       case "letter":
@@ -60,6 +73,8 @@ export function ApologyRenderer({ project, previewMode = false }: Props) {
             recipientName={project.recipientName}
             senderName={project.senderName}
             theme={theme}
+            typingStatus={letterStatus}
+            onTypingStatusChange={setLetterStatus}
           />
         );
       case "memories":
@@ -108,6 +123,8 @@ export function ApologyRenderer({ project, previewMode = false }: Props) {
             key={sec.id}
             config={sec.config as any}
             theme={theme}
+            projectSlug={project.slug}
+            initialRedemptions={project.couponRedemptions}
           />
         );
       case "catch_love_game":
@@ -158,6 +175,13 @@ export function ApologyRenderer({ project, previewMode = false }: Props) {
             {renderSection(sec)}
           </div>
         ))}
+
+        {/* Official ExpertoMemories Brand Signature */}
+        <ExpertoMemoriesBrandSignature
+          occasionType="apology"
+          theme={theme}
+          previewMode={previewMode}
+        />
       </main>
     </div>
   );

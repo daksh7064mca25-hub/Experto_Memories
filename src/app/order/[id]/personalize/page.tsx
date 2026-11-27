@@ -48,10 +48,8 @@ export default function PersonalizePage({
   let idFromProps = "";
   if (params) {
     if (typeof (params as any).then === "function") {
-      try {
-        const resolved = use(params as Promise<{ id: string }>);
-        if (resolved && resolved.id) idFromProps = resolved.id;
-      } catch {}
+      const resolved = use(params as Promise<{ id: string }>);
+      if (resolved && resolved.id) idFromProps = resolved.id;
     } else if (typeof params === "object" && (params as any).id) {
       idFromProps = (params as any).id;
     }

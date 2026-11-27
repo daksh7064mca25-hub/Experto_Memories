@@ -41,7 +41,9 @@ export const projectService = {
       const docs = await WebsiteProject.find().sort({ updatedAt: -1 }).lean();
       return (docs || []).map((d: any) => ({
         ...d,
-        _id: d._id.toString(),
+        _id: d._id?.toString() || d._id,
+        customerId: d.customerId?.toString() || d.customerId,
+        orderId: d.orderId?.toString() || d.orderId,
         occasionType: d.occasionType || "apology",
       }));
     }
@@ -83,7 +85,9 @@ export const projectService = {
         .lean();
       return (docs || []).map((d: any) => ({
         ...d,
-        _id: d._id.toString(),
+        _id: d._id?.toString() || d._id,
+        customerId: d.customerId?.toString() || d.customerId,
+        orderId: d.orderId?.toString() || d.orderId,
         occasionType: d.occasionType || "apology",
       }));
     }
@@ -140,7 +144,9 @@ export const projectService = {
       if (!doc) return null;
       return {
         ...(doc as any),
-        _id: (doc as any)._id.toString(),
+        _id: (doc as any)._id?.toString() || (doc as any)._id,
+        customerId: (doc as any).customerId?.toString() || (doc as any).customerId,
+        orderId: (doc as any).orderId?.toString() || (doc as any).orderId,
         occasionType: (doc as any).occasionType || "apology",
       };
     }
@@ -169,7 +175,9 @@ export const projectService = {
 
       return {
         ...(doc as any),
-        _id: (doc as any)._id.toString(),
+        _id: (doc as any)._id?.toString() || (doc as any)._id,
+        customerId: (doc as any).customerId?.toString() || (doc as any).customerId,
+        orderId: (doc as any).orderId?.toString() || (doc as any).orderId,
         occasionType: (doc as any).occasionType || "apology",
       };
     }
@@ -291,7 +299,9 @@ export const projectService = {
       if (!doc) return null;
       return {
         ...(doc as any),
-        _id: (doc as any)._id.toString(),
+        _id: (doc as any)._id?.toString() || (doc as any)._id,
+        customerId: (doc as any).customerId?.toString() || (doc as any).customerId,
+        orderId: (doc as any).orderId?.toString() || (doc as any).orderId,
         occasionType: (doc as any).occasionType || "apology",
       };
     }

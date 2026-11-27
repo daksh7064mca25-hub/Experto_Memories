@@ -27,6 +27,23 @@ export async function POST(
       return NextResponse.json({ error: "Wedding project not found" }, { status: 404 });
     }
 
+    if (project.status !== "published") {
+      // Allow authenticated project owner or admin to test RSVP on their draft
+      const { getCustomerSession, getAdminSession } = await import("@/lib/auth");
+      const customerSession = await getCustomerSession();
+      const adminSession = await getAdminSession();
+      const isOwner =
+        (customerSession &&
+          (String(project.customerId || "") === customerSession.userId ||
+            (project.customerEmail &&
+              project.customerEmail.toLowerCase() === customerSession.email.toLowerCase()))) ||
+        (adminSession && adminSession.role === "admin");
+
+      if (!isOwner) {
+        return NextResponse.json({ error: "This invitation is not published yet." }, { status: 403 });
+      }
+    }
+
     const body = await req.json();
     const {
       guestName,
@@ -43,6 +60,9 @@ export async function POST(
       return NextResponse.json({ error: "Guest name is required" }, { status: 400 });
     }
 
+    const validStatuses = ["attending", "not_attending", "maybe"];
+    const safeAttendanceStatus = validStatuses.includes(attendanceStatus) ? attendanceStatus : "attending";
+
     const clientIp =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
@@ -57,7 +77,7 @@ export async function POST(
         guestName: guestName.trim(),
         guestEmail: guestEmail?.trim()?.toLowerCase(),
         guestPhone: guestPhone?.trim(),
-        attendanceStatus,
+        attendanceStatus: safeAttendanceStatus,
         guestCount: Math.max(1, Math.min(20, Number(guestCount) || 1)),
         attendingEvents: Array.isArray(attendingEvents) ? attendingEvents : [],
         dietaryNotes: dietaryNotes?.trim(),

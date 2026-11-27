@@ -52,7 +52,7 @@ export const FAQ_DATA: FaqItem[] = [
     id: "what-happens-after-payment",
     category: "Payments & Publishing",
     q: "What happens after payment?",
-    a: "Immediately upon payment confirmation, your gift website is published to its permanent, private live link (e.g. expertomemories.in/gift/your-story). You receive a 1-click WhatsApp sharing link and a high-resolution printable QR gift card to include in physical gift boxes or flowers.",
+    a: "Immediately upon payment confirmation, your gift website is published to its permanent, private live link (e.g. expertomemories.shop/gift/your-story). You receive a 1-click WhatsApp sharing link and a high-resolution printable QR gift card to include in physical gift boxes or flowers.",
   },
   {
     id: "how-long-accessible",

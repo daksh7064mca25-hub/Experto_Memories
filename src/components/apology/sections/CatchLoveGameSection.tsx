@@ -34,12 +34,14 @@ export function CatchLoveGameSection({ config, theme }: Props) {
     if (gameState !== "playing") return;
 
     if (timeLeft <= 0) {
-      setGameState("finished");
-      confetti({
-        particleCount: 70,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ["#ec4899", "#f43f5e", "#fb7185", "#fbbf24"],
+      Promise.resolve().then(() => {
+        setGameState("finished");
+        confetti({
+          particleCount: 70,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ["#ec4899", "#f43f5e", "#fb7185", "#fbbf24"],
+        });
       });
       return;
     }

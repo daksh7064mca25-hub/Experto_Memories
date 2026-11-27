@@ -138,6 +138,7 @@ export async function POST(req: Request) {
             theme: primaryItem.selectedTheme as any,
             status: "draft",
             orderId: order._id.toString(),
+            customerId: order.customerId ? order.customerId.toString() : undefined,
             customerEmail: order.customer.email,
             customerPhone: order.customer.phone,
           });
@@ -145,6 +146,22 @@ export async function POST(req: Request) {
       }
 
       order.projectId = project._id as any;
+
+      if (project && project._id) {
+        const projectUpdates: any = {
+          paymentStatus: "paid",
+          paidAt: new Date(),
+          paymentMethod: "razorpay",
+        };
+        if (order.customerId && !project.customerId) {
+          projectUpdates.customerId = order.customerId;
+        }
+        if ((order as any).packageDetails?.isCustomDomain) {
+          projectUpdates["customDomain.status"] = "awaiting_customer_registration";
+        }
+        await WebsiteProject.findByIdAndUpdate(project._id, { $set: projectUpdates });
+      }
+
       order.auditTrail = order.auditTrail || [];
       order.auditTrail.push({
         action: "WEBHOOK_PAYMENT_CAPTURED",
@@ -232,6 +249,7 @@ export async function POST(req: Request) {
             theme: primaryItem.selectedTheme as any,
             status: "draft",
             orderId: order._id.toString(),
+            customerId: order.customerId ? order.customerId.toString() : undefined,
             customerEmail: order.customer.email,
             customerPhone: order.customer.phone,
           });
@@ -239,6 +257,22 @@ export async function POST(req: Request) {
       }
 
       order.projectId = project._id as any;
+
+      if (project && project._id) {
+        const projectUpdates: any = {
+          paymentStatus: "paid",
+          paidAt: new Date(),
+          paymentMethod: "razorpay",
+        };
+        if (order.customerId && !project.customerId) {
+          projectUpdates.customerId = order.customerId;
+        }
+        if ((order as any).packageDetails?.isCustomDomain) {
+          projectUpdates["customDomain.status"] = "awaiting_customer_registration";
+        }
+        await WebsiteProject.findByIdAndUpdate(project._id, { $set: projectUpdates });
+      }
+
       order.auditTrail = order.auditTrail || [];
       order.auditTrail.push({
         action: "WEBHOOK_ORDER_PAID",

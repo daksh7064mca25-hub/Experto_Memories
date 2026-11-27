@@ -271,6 +271,55 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     ],
     demoUrl: "/demo/wedding",
   },
+  {
+    id: "prod-wedding-luxury",
+    slug: "luxury-wedding",
+    title: "The Luxury Wedding Collection",
+    subtitle: "Haute Couture Folio Unboxing, Champagne Romance & Bespoke Elegance",
+    occasionType: "wedding",
+    category: "wedding",
+    price: 1999,
+    originalPrice: 3999,
+    badge: "Haute Couture",
+    description:
+      "An ultra-luxury wedding invitation inspired by haute couture stationery, featuring rich ivory, champagne gold, deep burgundy wine accents, and editorial typography.",
+    features: [
+      "3D Gilded Unboxing Folio & Wax Seal Opening Ceremony",
+      "Live Luxury Wedding Countdown Counter",
+      "Multi-Ceremony Schedule with interactive Google Maps & attire guides",
+      "Editorial Love Story Timeline & High-Res Portrait Carousel",
+      "Real-Time VIP Guest RSVP with Multi-Event Attendance & Dietary Intelligence",
+      "Travel Concierge, Accommodations & WhatsApp Sharing",
+    ],
+    defaultTheme: "champagne-gold",
+    themes: [
+      {
+        id: "champagne-gold",
+        name: "Champagne & Warm Ivory",
+        description: "Bespoke warm ivory, delicate gold foil & linen",
+        previewColor: "#D4AF37",
+      },
+      {
+        id: "burgundy-wine",
+        name: "Deep Burgundy Wine & Gold",
+        description: "Deep royal wine, velvet gold & black tie accents",
+        previewColor: "#58111A",
+      },
+      {
+        id: "onyx-noir",
+        name: "Onyx Noir & Champagne",
+        description: "Timeless black tie glamour, dark obsidian & bullion gold",
+        previewColor: "#1A1A1A",
+      },
+      {
+        id: "emerald-monogram",
+        name: "Imperial Emerald",
+        description: "Regal jewel emerald with antique champagne borders",
+        previewColor: "#0F281E",
+      },
+    ],
+    demoUrl: "/demo/wedding/luxury",
+  },
 ];
 
 export function getProductBySlug(slug: string): CatalogProduct | undefined {

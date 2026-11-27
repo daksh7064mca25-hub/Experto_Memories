@@ -175,6 +175,7 @@ export function LoveUniverseSection({ config, theme }: Props) {
                     src={activeStar.photoUrl}
                     alt={activeStar.title}
                     fill
+                    sizes="(max-width: 480px) 90vw, 420px"
                     className="object-cover"
                     unoptimized={activeStar.photoUrl.startsWith("/api/media/view")}
                   />
@@ -225,6 +226,7 @@ export function LoveUniverseSection({ config, theme }: Props) {
                     src={config.centralStarPhotoUrl}
                     alt={config.centralStarTitle}
                     fill
+                    sizes="(max-width: 540px) 92vw, 480px"
                     className="object-cover"
                     unoptimized={config.centralStarPhotoUrl.startsWith("/api/media/view")}
                   />

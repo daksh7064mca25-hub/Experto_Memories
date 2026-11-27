@@ -23,6 +23,15 @@ export interface EffectivePricingResult {
   cnameTarget: string;
   occasionPrices: Record<string, number>;
   products: OccasionPricingInfo[];
+  paymentMethodsAllowed: "both" | "razorpay_only" | "upi_only";
+  manualUpiConfig?: {
+    bankName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    upiId?: string;
+    displayName?: string;
+    qrCodeUrl?: string;
+  };
 }
 
 /**
@@ -39,7 +48,11 @@ export async function getEffectivePricing(occasionOrSlug?: string): Promise<{
   customDomainPrice: number;
   effectivePricing: EffectivePricingResult;
 }> {
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
+  } catch (err: any) {
+    console.warn("Database connection unavailable in getEffectivePricing, falling back to cached catalog pricing:", err?.message || err);
+  }
 
   let settings;
   try {
@@ -53,7 +66,7 @@ export async function getEffectivePricing(occasionOrSlug?: string): Promise<{
       hostingDurationMonths: 12,
       renewalPolicy:
         "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly by you with your domain registrar.",
-      cnameTarget: "cname.expertomemories.com",
+      cnameTarget: "cname.expertomemories.shop",
     };
   }
 
@@ -64,7 +77,7 @@ export async function getEffectivePricing(occasionOrSlug?: string): Promise<{
   const renewalPolicy =
     settings.renewalPolicy ||
     "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly by you with your domain registrar.";
-  const cnameTarget = settings.cnameTarget || "cname.expertomemories.com";
+  const cnameTarget = settings.cnameTarget || "cname.expertomemories.shop";
 
   let dbProducts: any[] = [];
   try {
@@ -146,6 +159,8 @@ export async function getEffectivePricing(occasionOrSlug?: string): Promise<{
       cnameTarget,
       occasionPrices,
       products,
+      paymentMethodsAllowed: (settings?.paymentMethodsAllowed as any) || "both",
+      manualUpiConfig: settings?.manualUpiConfig,
     },
   };
 }

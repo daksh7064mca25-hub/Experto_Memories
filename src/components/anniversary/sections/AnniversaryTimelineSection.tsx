@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
-import { Sparkles, Calendar, Heart, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Calendar, Heart, MapPin, ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
 import { AnniversaryTimelineConfig, TimelineMilestone, ThemeId } from "@/types/website";
 import { getThemeConfig } from "@/config/anniversary-themes";
 import { isProtectedMediaUrl } from "@/lib/media-utils";
@@ -16,6 +15,8 @@ export function AnniversaryTimelineSection({ config, theme }: Props) {
   const [expandedMilestoneId, setExpandedMilestoneId] = useState<string | null>(
     config.milestones?.[0]?.id || null
   );
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
   const themeConfig = getThemeConfig(theme, "anniversary");
   const milestones = config.milestones || [];
 
@@ -24,98 +25,106 @@ export function AnniversaryTimelineSection({ config, theme }: Props) {
   };
 
   return (
-    <section id="anniv-sec-timeline" className="py-16 px-4 max-w-3xl mx-auto">
+    <section id="anniv-sec-timeline" className="py-14 sm:py-20 px-4 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-12">
-        <span className="inline-block px-3.5 py-1 rounded-full text-xs font-serif font-semibold bg-amber-100 dark:bg-purple-950 text-amber-800 dark:text-purple-300 mb-2 border border-amber-200/80 dark:border-purple-800">
-          Our Love Story Timeline ⏳
+      <div className="text-center mb-10 sm:mb-14">
+        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-serif font-medium bg-white/90 text-[#6B2D38] border border-[#E8B4B8]/60 shadow-sm mb-3">
+          <Sparkles size={13} className="text-[#C46879]" />
+          <span>Our Love Story Timeline</span>
         </span>
-        <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-stone-900 dark:text-purple-100">
-          {config.headline || "How It All Began"}
+        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#3D262A]">
+          {config.headline || "Chapters of Our Story"}
         </h2>
-        <p className="text-sm opacity-80 mt-2 max-w-md mx-auto font-sans leading-relaxed">
+        <p className="font-serif italic text-xs sm:text-sm md:text-base text-[#6B2D38]/85 mt-2 max-w-lg mx-auto leading-relaxed">
           {config.subtext ||
             "From strangers across a crowded cafe to two hearts beating as one."}
         </p>
       </div>
 
       {/* Vertical Interactive Timeline */}
-      <div className="relative pl-6 sm:pl-8 border-l-2 border-dashed border-amber-300/80 dark:border-purple-700/80 ml-4 sm:ml-8 space-y-8">
+      <div className="relative pl-6 sm:pl-10 border-l-2 border-dashed border-[#E8B4B8] ml-4 sm:ml-8 space-y-8 sm:space-y-10">
         {milestones.map((item, index) => {
           const isExpanded = expandedMilestoneId === item.id;
 
           return (
             <div key={item.id || index} className="relative group">
               {/* Timeline Heart Marker Node */}
-              <div
+              <button
+                type="button"
                 onClick={() => toggleMilestone(item.id)}
-                className={`absolute -left-[35px] sm:-left-[43px] top-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                aria-label={`Toggle milestone ${item.title}`}
+                className={`absolute -left-[31px] sm:-left-[47px] top-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
                   isExpanded
-                    ? "bg-amber-500 text-white scale-110 ring-4 ring-amber-100 dark:ring-purple-900"
-                    : "bg-white dark:bg-stone-900 text-amber-600 dark:text-purple-400 border-2 border-amber-300 dark:border-purple-600 hover:scale-105"
+                    ? "bg-[#C46879] text-white scale-110 ring-4 ring-[#E8B4B8]/40"
+                    : "bg-white text-[#C46879] border-2 border-[#E8B4B8] hover:scale-105"
                 }`}
               >
-                <Heart size={14} className="fill-current" />
-              </div>
+                <Heart size={13} className="fill-current" />
+              </button>
 
               {/* Milestone Card */}
               <div
                 onClick={() => toggleMilestone(item.id)}
-                className={`cursor-pointer rounded-2xl p-5 sm:p-6 transition-all duration-300 border ${
+                className={`cursor-pointer rounded-3xl p-5 sm:p-7 transition-all duration-300 border ${
                   isExpanded
-                    ? `${themeConfig.cardBgClass} shadow-xl scale-[1.01] border-amber-300/80 dark:border-purple-600`
-                    : "bg-white/70 dark:bg-stone-900/60 hover:bg-white/90 border-stone-200/70 dark:border-stone-800"
+                    ? "bg-white/95 backdrop-blur-md shadow-xl border-[#E8B4B8] shadow-[#6B2D38]/8 scale-[1.005]"
+                    : "bg-white/80 hover:bg-white/95 backdrop-blur-sm border-[#E8B4B8]/50 shadow-sm"
                 }`}
               >
                 {/* Milestone Top Bar */}
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-100/70 dark:bg-purple-950 text-amber-800 dark:text-purple-300 border border-amber-200/50">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[11px] font-mono font-bold px-3 py-0.5 rounded-full bg-[#FFF5F6] text-[#6B2D38] border border-[#E8B4B8]/70">
                       {item.tag || `Chapter #${index + 1}`}
                     </span>
-                    <span className="text-xs text-stone-500 dark:text-purple-300 font-serif italic">
-                      {item.date}
+                    <span className="text-xs text-[#6B2D38]/80 font-serif italic flex items-center gap-1">
+                      <Calendar size={12} className="text-[#C46879]" />
+                      <span>{item.date}</span>
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    aria-label={isExpanded ? "Collapse memory" : "Expand memory"}
-                    className="p-1 rounded-full text-stone-400 hover:text-stone-700 min-h-[32px] min-w-[32px] flex items-center justify-center"
-                  >
+                  <div className="text-[#C46879] p-1">
                     {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </button>
+                  </div>
                 </div>
 
                 {/* Milestone Title */}
-                <h3 className="font-serif font-bold text-lg sm:text-xl text-stone-900 dark:text-purple-100 mb-2">
+                <h3 className="font-serif font-bold text-lg sm:text-xl text-[#3D262A] mb-2 leading-snug">
                   {item.title}
                 </h3>
 
                 {/* Description */}
-                <p className="font-sans text-xs sm:text-sm text-stone-700 dark:text-purple-200 leading-relaxed">
+                <p className="font-sans text-xs sm:text-sm text-[#3D262A]/85 leading-relaxed">
                   {item.description}
                 </p>
 
                 {/* Expanded Photos/Media */}
                 {isExpanded && item.photos && item.photos.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-amber-100 dark:border-purple-900/40 animate-in fade-in duration-300">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="mt-5 pt-4 border-t border-[#E8B4B8]/40">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {item.photos.map((photoUrl, pIdx) => {
                         if (!photoUrl) return null;
                         return (
                           <div
                             key={pIdx}
-                            className="relative aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 shadow-sm border border-stone-200/60"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPhoto(photoUrl);
+                            }}
+                            className="group/photo relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#FAF6F0] shadow-sm border border-[#E8B4B8]/60 cursor-zoom-in"
                           >
-                            <Image
+                            <img
                               src={photoUrl}
-                              alt={`${item.title} photograph`}
-                              fill
-                              unoptimized={isProtectedMediaUrl(photoUrl)}
-                              sizes="(max-width: 640px) 100vw, 300px"
-                              className="object-cover"
+                              alt={`${item.title} memory ${pIdx + 1}`}
+                              className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500"
+                              loading="lazy"
                             />
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="px-3 py-1 rounded-full bg-white/90 text-xs font-serif text-[#6B2D38] shadow-md flex items-center gap-1">
+                                <ImageIcon size={12} />
+                                <span>View Photo</span>
+                              </span>
+                            </div>
                           </div>
                         );
                       })}
@@ -127,7 +136,28 @@ export function AnniversaryTimelineSection({ config, theme }: Props) {
           );
         })}
       </div>
+
+      {/* Lightbox Photo Modal */}
+      {selectedPhoto && (
+        <div
+          onClick={() => setSelectedPhoto(null)}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+        >
+          <div className="relative max-w-3xl max-h-[90vh] flex flex-col items-center">
+            <img
+              src={selectedPhoto}
+              alt="Expanded milestone memory"
+              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/20"
+            />
+            <button
+              onClick={() => setSelectedPhoto(null)}
+              className="mt-4 px-5 py-2 rounded-full bg-white/90 text-xs font-serif font-semibold text-[#6B2D38] hover:bg-white shadow-lg"
+            >
+              Close Photo
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
-

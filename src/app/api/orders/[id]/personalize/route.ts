@@ -9,6 +9,7 @@ import {
 } from "@/lib/validations/personalization.schema";
 import { syncPersonalizationToProject } from "@/services/personalization-sync.service";
 import { getAdminSession } from "@/lib/auth";
+import mongoose from "mongoose";
 
 export async function GET(
   req: Request,
@@ -16,6 +17,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
     const { searchParams } = new URL(req.url);
     const token =
       searchParams.get("token") ||
@@ -103,6 +107,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
     const body = await req.json();
     const { action = "draft", personalization, token: bodyToken, clientUpdatedAt } = body;
 

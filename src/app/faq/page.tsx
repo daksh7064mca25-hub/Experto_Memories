@@ -1,6 +1,8 @@
 import { Metadata, Viewport } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { FaqAccordion } from "@/components/faq/FaqAccordion";
+import { PublicHeader } from "@/components/navigation/PublicHeader";
 import {
   Heart,
   Sparkles,
@@ -11,11 +13,8 @@ import {
   Lock,
   Mail,
   ArrowRight,
-  Menu,
-  X,
   Gift,
 } from "lucide-react";
-import FaqHeader from "./FaqHeader";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -38,19 +37,8 @@ export const metadata: Metadata = {
 export default function FaqPage() {
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#211715] flex flex-col font-sans selection:bg-[#541D2B]/15 selection:text-[#541D2B]">
-      {/* 1. TOP ANNOUNCEMENT RIBBON */}
-      <div className="bg-[#211715] text-[#FAF7F2] text-[11px] py-2 px-4 text-center font-sans tracking-wider border-b border-[#3A2D2A]">
-        <div className="max-w-6xl mx-auto flex items-center justify-center gap-2">
-          <span className="text-[#C5A36A]">✦</span>
-          <span>
-            Bespoke Interactive Digital Gifts • Free to Customize &amp; Preview • 12 Months Cloud Hosting Included
-          </span>
-          <span className="text-[#C5A36A]">✦</span>
-        </div>
-      </div>
-
-      {/* 2. REFINED EDITORIAL HEADER */}
-      <FaqHeader />
+      {/* UNIVERSAL NAVBAR */}
+      <PublicHeader showAnnouncement={true} />
 
       <main className="flex-1">
         {/* 3. EDITORIAL HERO SECTION */}
@@ -199,11 +187,11 @@ export default function FaqPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="mailto:support@expertomemories.in"
+                href="mailto:support@expertomemories.shop"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-xs font-semibold bg-[#541D2B] hover:bg-[#682435] text-white shadow-md transition-all hover:scale-105"
               >
                 <Mail size={14} />
-                <span>Email Studio Concierge: support@expertomemories.in</span>
+                <span>Email Studio Concierge: support@expertomemories.shop</span>
               </a>
 
               <Link
@@ -224,11 +212,18 @@ export default function FaqPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
             {/* Brand Intro */}
             <div className="lg:col-span-5 space-y-4">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#541D2B] text-[#FAF7F2] flex items-center justify-center">
-                  <Heart size={14} className="fill-current text-[#FAF7F2]" />
+              <Link href="/" className="inline-flex items-center gap-2.5 sm:gap-3 group" aria-label="ExpertoMemories Home">
+                <div className="relative h-8 sm:h-9 w-auto shrink-0 flex items-center">
+                  <Image
+                    src="/branding/expertomemories-monogram.png"
+                    alt="ExpertoMemories EM Monogram"
+                    width={505}
+                    height={321}
+                    loading="eager"
+                    className="h-8 sm:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
-                <span className="font-serif font-bold text-xl tracking-tight text-[#FAF7F2]">
+                <span className="font-serif font-bold text-xl sm:text-2xl tracking-tight text-[#FAF7F2] block leading-none">
                   ExpertoMemories
                 </span>
               </Link>
@@ -296,7 +291,7 @@ export default function FaqPage() {
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:support@expertomemories.in" className="hover:text-white transition-colors">
+                  <a href="mailto:support@expertomemories.shop" className="hover:text-white transition-colors">
                     Contact Us
                   </a>
                 </li>
@@ -328,8 +323,8 @@ export default function FaqPage() {
               <div className="pt-2">
                 <p className="text-[10px] text-[#78716C] leading-relaxed">
                   Support concierge:{" "}
-                  <a href="mailto:support@expertomemories.in" className="text-[#C5A36A] hover:underline">
-                    support@expertomemories.in
+                  <a href="mailto:support@expertomemories.shop" className="text-[#C5A36A] hover:underline">
+                    support@expertomemories.shop
                   </a>
                 </p>
               </div>

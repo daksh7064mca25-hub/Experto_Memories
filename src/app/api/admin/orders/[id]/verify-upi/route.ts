@@ -37,10 +37,48 @@ export async function POST(req: Request, context: Context) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
+    if (order.paymentStatus === "paid") {
+      return NextResponse.json({
+        success: true,
+        alreadyPaid: true,
+        message: "Order is already verified and marked as paid.",
+        orderId: order._id.toString(),
+        projectId: order.projectId?.toString() || null,
+      });
+    }
+
+    // Check whether this order's UTR is already verified and paid in another order
+    const utr = order.manualUpiDetails?.normalizedUtr || order.manualUpiDetails?.utrNumber;
+    const normalizedUtr = utr
+      ? utr.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")
+      : undefined;
+
+    if (normalizedUtr) {
+      const alreadyPaidConflict = await Order.findOne({
+        _id: { $ne: order._id },
+        paymentStatus: "paid",
+        $or: [
+          { "manualUpiDetails.normalizedUtr": normalizedUtr },
+          { "manualUpiDetails.utrNumber": normalizedUtr },
+          { "manualUpiDetails.utrNumber": utr },
+        ],
+      }).lean();
+
+      if (alreadyPaidConflict) {
+        return NextResponse.json(
+          {
+            error: `Cannot verify payment: UPI reference (UTR) ${utr} has already been verified and marked as paid under order ${alreadyPaidConflict.orderNumber}.`,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     // 1. Update Payment Status to PAID with Admin Audit Info
     order.paymentStatus = "paid";
     order.manualUpiDetails = {
       ...order.manualUpiDetails,
+      normalizedUtr: normalizedUtr || order.manualUpiDetails?.normalizedUtr,
       verifiedAt: new Date(),
       verifiedBy: session.email,
     };
@@ -61,6 +99,7 @@ export async function POST(req: Request, context: Context) {
         theme: primaryItem.selectedTheme as any,
         status: "draft",
         orderId: order._id.toString(),
+        customerId: order.customerId ? order.customerId.toString() : undefined,
         customerEmail: order.customer.email,
         customerPhone: order.customer.phone,
       });
@@ -73,6 +112,9 @@ export async function POST(req: Request, context: Context) {
         paidAt: new Date(),
         paymentMethod: "manual_upi",
       };
+      if (order.customerId && !project.customerId) {
+        projectUpdates.customerId = order.customerId;
+      }
       if ((order as any).packageDetails?.isCustomDomain) {
         projectUpdates["customDomain.status"] = "awaiting_customer_registration";
       }

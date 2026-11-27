@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Settings,
@@ -31,7 +31,7 @@ export default function StudioSettingsPage() {
   const [customDomainPrice, setCustomDomainPrice] = useState(1200);
   const [hostingDurationMonths, setHostingDurationMonths] = useState(12);
   const [renewalPolicy, setRenewalPolicy] = useState("");
-  const [cnameTarget, setCnameTarget] = useState("cname.expertomemories.com");
+  const [cnameTarget, setCnameTarget] = useState("cname.expertomemories.shop");
   const [paymentMethodsAllowed, setPaymentMethodsAllowed] = useState<"both" | "razorpay_only" | "upi_only">("both");
   const [productPrices, setProductPrices] = useState<any[]>([]);
   const [occasionPrices, setOccasionPrices] = useState<Record<string, number>>({});
@@ -47,7 +47,7 @@ export default function StudioSettingsPage() {
   // Gateway status from server
   const [gateways, setGateways] = useState<any | null>(null);
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/admin/settings", { credentials: "include" });
@@ -57,7 +57,7 @@ export default function StudioSettingsPage() {
         setCustomDomainPrice(data.settings.customDomainPrice);
         setHostingDurationMonths(data.settings.hostingDurationMonths || 12);
         setRenewalPolicy(data.settings.renewalPolicy || "");
-        setCnameTarget(data.settings.cnameTarget || "cname.expertomemories.com");
+        setCnameTarget(data.settings.cnameTarget || "cname.expertomemories.shop");
         setPaymentMethodsAllowed(data.settings.paymentMethodsAllowed || "both");
 
         if (data.settings.manualUpiConfig) {
@@ -85,11 +85,13 @@ export default function StudioSettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    Promise.resolve().then(() => {
+      fetchSettings();
+    });
+  }, [fetchSettings]);
 
   const handleOccasionPriceChange = (slug: string, newPrice: number) => {
     setOccasionPrices((prev) => ({
@@ -135,6 +137,7 @@ export default function StudioSettingsPage() {
       const data = await res.json();
       if (res.ok) {
         setSaveMsg("Business pricing, policy, and payment settings saved successfully!");
+        await fetchSettings();
         setTimeout(() => setSaveMsg(""), 3500);
       } else {
         setSaveMsg(data.error || "Failed to update settings");
@@ -302,7 +305,59 @@ export default function StudioSettingsPage() {
               </Link>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-stone-200">
+            {/* Mobile Pricing Overrides Cards (<640px) */}
+            <div className="sm:hidden divide-y divide-stone-100 rounded-2xl border border-stone-200 overflow-hidden bg-white">
+              {(productPrices.length > 0
+                ? productPrices
+                : [
+                    { id: "prod-wedding", slug: "wedding", title: "The Royal Wedding Invitation", occasionType: "wedding", price: 1499, isCustomPrice: true },
+                    { id: "prod-anniversary", slug: "anniversary", title: "Our Forever Story", occasionType: "anniversary", price: 999, isCustomPrice: false },
+                    { id: "prod-birthday", slug: "birthday", title: "The Birthday Chronicle", occasionType: "birthday", price: 999, isCustomPrice: false },
+                    { id: "prod-love", slug: "love", title: "The Secret World of Us", occasionType: "love", price: 999, isCustomPrice: false },
+                    { id: "prod-apology", slug: "apology", title: "A Little Sorry, A Lot of Love", occasionType: "apology", price: 999, isCustomPrice: false },
+                  ]
+              ).map((prod) => {
+                const currentPrice = occasionPrices[prod.slug.toLowerCase()] ?? prod.price ?? basePrice;
+                const isCustom = prod.isCustomPrice || currentPrice !== basePrice;
+
+                return (
+                  <div key={prod.slug} className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-semibold text-xs text-stone-900 block">{prod.title}</span>
+                        <span className="text-[10px] font-mono text-stone-400 uppercase font-bold">{prod.occasionType} • {prod.slug}</span>
+                      </div>
+                      {isCustom ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 shrink-0">
+                          Override
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full shrink-0">
+                          Base (₹{basePrice})
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <label className="text-xs text-stone-600 font-medium">Active Price:</label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-stone-400 font-mono text-xs">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={currentPrice}
+                          onChange={(e) => handleOccasionPriceChange(prod.slug, Number(e.target.value))}
+                          className="w-28 px-3 py-1.5 rounded-xl border border-stone-200 font-mono text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-rose-500 bg-stone-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Pricing Overrides Table (>=640px) */}
+            <div className="hidden sm:block overflow-x-auto rounded-2xl border border-stone-200">
               <table className="w-full text-left text-xs">
                 <thead className="bg-stone-50 text-[10px] font-mono uppercase text-stone-500 border-b border-stone-200">
                   <tr>

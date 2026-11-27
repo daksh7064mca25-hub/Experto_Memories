@@ -2,9 +2,34 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "expertomemories-secret-jwt-key-2025-secure!"
-);
+/**
+ * Safely resolves the JWT Secret key with strict production enforcement.
+ * - In production (NODE_ENV=production, APP_ENV=production, VERCEL_ENV=production, or NETLIFY=true):
+ *   JWT_SECRET MUST be explicitly set in environment variables and be at least 32 characters long.
+ *   Missing or weak secrets immediately throw a critical security error, preventing startup or token issuance with insecure keys.
+ * - In development / testing: Falls back to a local testing key when JWT_SECRET is unset.
+ */
+export function getJwtSecretKey(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.APP_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NETLIFY === "true";
+
+  if (isProduction) {
+    if (!secret || secret.trim().length < 32) {
+      throw new Error(
+        "[FATAL SECURITY ERROR] In production, JWT_SECRET must be configured via environment variables with at least 32 characters. Hardcoded fallbacks are strictly prohibited."
+      );
+    }
+    return new TextEncoder().encode(secret.trim());
+  }
+
+  return new TextEncoder().encode(
+    secret?.trim() || "expertomemories-secret-jwt-key-2025-secure!"
+  );
+}
 
 export const AUTH_COOKIE_NAME = "em_admin_token";
 export const AUTH_CUSTOMER_COOKIE_NAME = "em_customer_token";
@@ -33,16 +58,18 @@ export async function comparePassword(password: string, hash: string): Promise<b
 }
 
 export async function signAdminToken(payload: AdminPayload): Promise<string> {
+  const secretKey = getJwtSecretKey();
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(JWT_SECRET);
+    .sign(secretKey);
 }
 
 export async function verifyAdminToken(token: string): Promise<AdminPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const secretKey = getJwtSecretKey();
+    const { payload } = await jwtVerify(token, secretKey);
     if ((payload as any).role === "admin") {
       return payload as unknown as AdminPayload;
     }
@@ -53,16 +80,18 @@ export async function verifyAdminToken(token: string): Promise<AdminPayload | nu
 }
 
 export async function signCustomerToken(payload: CustomerPayload): Promise<string> {
+  const secretKey = getJwtSecretKey();
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
-    .sign(JWT_SECRET);
+    .sign(secretKey);
 }
 
 export async function verifyCustomerToken(token: string): Promise<CustomerPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const secretKey = getJwtSecretKey();
+    const { payload } = await jwtVerify(token, secretKey);
     if ((payload as any).role === "customer") {
       return payload as unknown as CustomerPayload;
     }
@@ -82,6 +111,7 @@ export interface WebsiteUnlockPayload {
  * Scoped strictly to the target slug and expires after 7 days.
  */
 export async function signWebsiteUnlockToken(slug: string): Promise<string> {
+  const secretKey = getJwtSecretKey();
   return new SignJWT({
     slug,
     type: "website_unlock",
@@ -89,7 +119,7 @@ export async function signWebsiteUnlockToken(slug: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(JWT_SECRET);
+    .sign(secretKey);
 }
 
 /**
@@ -102,7 +132,8 @@ export async function verifyWebsiteUnlockToken(
 ): Promise<boolean> {
   if (!token || typeof token !== "string") return false;
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const secretKey = getJwtSecretKey();
+    const { payload } = await jwtVerify(token, secretKey);
     if (
       payload &&
       (payload as any).type === "website_unlock" &&

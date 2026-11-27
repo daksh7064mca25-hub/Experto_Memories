@@ -33,9 +33,21 @@ const RazorpayDetailsSchema = new Schema(
   { _id: false }
 );
 
+const ReleasedUtrRecordSchema = new Schema(
+  {
+    utrNumber: { type: String, required: true },
+    normalizedUtr: { type: String, required: true },
+    releasedAt: { type: Date, default: Date.now },
+    releasedBy: { type: String, required: true },
+    reason: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const ManualUpiDetailsSchema = new Schema(
   {
     utrNumber: { type: String, trim: true },
+    normalizedUtr: { type: String, trim: true, uppercase: true },
     screenshotUrl: { type: String },
     submittedAt: { type: Date },
     verifiedAt: { type: Date },
@@ -43,6 +55,7 @@ const ManualUpiDetailsSchema = new Schema(
     rejectionReason: { type: String },
     rejectedAt: { type: Date },
     rejectedBy: { type: String },
+    releasedUtrHistory: { type: [ReleasedUtrRecordSchema], default: [] },
   },
   { _id: false }
 );
@@ -146,6 +159,16 @@ const OrderSchema = new Schema<IOrderDoc>(
   },
   {
     timestamps: true,
+  }
+);
+
+OrderSchema.index(
+  { "manualUpiDetails.normalizedUtr": 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      "manualUpiDetails.normalizedUtr": { $type: "string" },
+    },
   }
 );
 

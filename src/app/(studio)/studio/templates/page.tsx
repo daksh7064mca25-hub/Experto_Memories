@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -15,6 +15,7 @@ import {
   Loader2,
   RefreshCw,
   Eye,
+  EyeOff,
   CheckCircle2,
   XCircle,
   AlertCircle,
@@ -26,9 +27,11 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [feedbackMsg, setFeedbackMsg] = useState("");
 
-  const fetchCatalogue = async () => {
+  const fetchCatalogue = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/admin/catalogue", { credentials: "include" });
@@ -45,33 +48,54 @@ export default function TemplatesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    fetchCatalogue();
-  }, []);
+    Promise.resolve().then(() => {
+      fetchCatalogue();
+    });
+  }, [fetchCatalogue]);
 
   const handleToggleActive = async (prod: any) => {
+    const updatedStatus = !prod.isActive;
+    const actionLabel = updatedStatus ? "show" : "hide";
+    if (
+      !window.confirm(
+        `Are you sure you want to ${actionLabel} "${prod.title}"? ${
+          updatedStatus
+            ? "It will be published and visible on the storefront for new creations."
+            : "It will be hidden from public catalog and new project creations."
+        }`
+      )
+    ) {
+      return;
+    }
+
+    setTogglingId(prod.id);
     try {
-      const updatedStatus = !prod.isActive;
       const res = await fetch("/api/admin/catalogue", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: prod.id,
-          title: prod.title,
-          subtitle: prod.subtitle,
-          price: prod.price,
-          badge: prod.badge,
           isActive: updatedStatus,
         }),
         credentials: "include",
       });
       if (res.ok) {
-        fetchCatalogue();
+        setFeedbackMsg(
+          `"${prod.title}" is now ${updatedStatus ? "Visible on storefront" : "Hidden from storefront"}.`
+        );
+        setTimeout(() => setFeedbackMsg(""), 3500);
+        await fetchCatalogue();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to update product visibility status");
       }
     } catch {
       alert("Error toggling product status");
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -156,6 +180,14 @@ export default function TemplatesPage() {
         </div>
       </div>
 
+      {/* Action Feedback Banner */}
+      {feedbackMsg && (
+        <div className="bg-emerald-50 border border-emerald-300 text-emerald-950 px-4 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-xs transition-all animate-fade-in">
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{feedbackMsg}</span>
+        </div>
+      )}
+
       {/* Products Grid */}
       {loading ? (
         <div className="p-16 text-center text-stone-500">
@@ -168,14 +200,14 @@ export default function TemplatesPage() {
             <div
               key={prod.id}
               className={`bg-white rounded-3xl border ${
-                prod.isActive ? "border-stone-200" : "border-stone-200 opacity-60"
-              } shadow-sm overflow-hidden flex flex-col justify-between`}
+                prod.isActive ? "border-stone-200" : "border-stone-200 opacity-75"
+              } shadow-sm overflow-hidden flex flex-col justify-between transition-all`}
             >
               <div>
                 {/* Header Strip */}
                 <div className="p-6 bg-gradient-to-r from-stone-50 to-rose-50/30 border-b border-stone-100 flex items-start justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
                         {prod.occasionType}
                       </span>
@@ -184,9 +216,15 @@ export default function TemplatesPage() {
                           {prod.badge}
                         </span>
                       )}
-                      {!prod.isActive && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-200 text-stone-700">
-                          Hidden
+                      {prod.isActive ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <CheckCircle2 size={11} className="text-emerald-600" />
+                          <span>Visible</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-stone-200 text-stone-700 border border-stone-300">
+                          <EyeOff size={11} className="text-stone-500" />
+                          <span>Hidden</span>
                         </span>
                       )}
                     </div>
@@ -259,14 +297,18 @@ export default function TemplatesPage() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    disabled={togglingId === prod.id}
                     onClick={() => handleToggleActive(prod)}
-                    className={`px-3 py-1.5 rounded-xl font-semibold transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl font-semibold transition-colors inline-flex items-center gap-1.5 ${
                       prod.isActive
                         ? "bg-stone-200 hover:bg-stone-300 text-stone-800"
                         : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    }`}
+                    } ${togglingId === prod.id ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
-                    {prod.isActive ? "Hide Product" : "Publish to Storefront"}
+                    {togglingId === prod.id && (
+                      <Loader2 size={12} className="animate-spin" />
+                    )}
+                    <span>{prod.isActive ? "Hide Product" : "Show Product"}</span>
                   </button>
                   <button
                     type="button"

@@ -63,8 +63,17 @@ export interface RazorpayDetails {
   paidAt?: Date;
 }
 
+export interface ReleasedUtrRecord {
+  utrNumber: string;
+  normalizedUtr: string;
+  releasedAt: Date;
+  releasedBy: string;
+  reason: string;
+}
+
 export interface ManualUpiDetails {
   utrNumber?: string;
+  normalizedUtr?: string;
   screenshotUrl?: string;
   submittedAt?: Date;
   verifiedAt?: Date;
@@ -72,6 +81,7 @@ export interface ManualUpiDetails {
   rejectionReason?: string;
   rejectedAt?: Date;
   rejectedBy?: string;
+  releasedUtrHistory?: ReleasedUtrRecord[];
 }
 
 export interface AuditTrailEntry {

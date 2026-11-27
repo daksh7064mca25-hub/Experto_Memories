@@ -76,8 +76,8 @@ export const CATALOGUE_CATEGORIES: CatalogueCategory[] = [
   {
     id: "digital-gifts",
     slug: "digital-gifts",
-    title: "Personalized Digital Gifts",
-    shortTitle: "Digital Gifts",
+    title: "Love & Relationship Gifts",
+    shortTitle: "Love & Relationships",
     eyebrow: "EMOTIONAL & MEMORABLE",
     headline: "Gifts That Speak What Words Alone Cannot",
     description:
@@ -167,7 +167,7 @@ export const CATALOGUE_SUBCATEGORIES: CatalogueSubcategory[] = [
     displayOrder: 3,
   },
 
-  // Wedding Collections (10 Cultural & Aesthetic Collections)
+  // Wedding Collections (Active Bespoke Collections & Archived Records)
   {
     id: "sub-royal-indian",
     slug: "royal-indian",
@@ -193,19 +193,19 @@ export const CATALOGUE_SUBCATEGORIES: CatalogueSubcategory[] = [
     slug: "punjabi",
     categoryId: "wedding-invitations",
     title: "Punjabi Wedding",
-    description: "Vibrant drumbeats, dhol & shahi chaddar reveal, jaggo, sangeet, and joyous Anand Karaj.",
+    description: "Vibrant drumbeats, dhol & shahi chaddar reveal, jaggo, sangeet, and joyous celebration.",
     badge: "Vibrant Celebration",
     iconName: "Music",
     displayOrder: 12,
   },
   {
-    id: "sub-sikh",
-    slug: "sikh",
+    id: "sub-luxury-wedding",
+    slug: "luxury-wedding",
     categoryId: "wedding-invitations",
-    title: "Sikh Wedding (Anand Karaj)",
-    description: "Spiritual serenity, golden sunrise lotus unfold, pastel peach, and sacred Gurdwara hymns.",
-    badge: "Spiritual Grace",
-    iconName: "Sun",
+    title: "Luxury Wedding",
+    description: "Haute couture stationery, gilded folio unboxing, champagne gold, and luxury destination grandeur.",
+    badge: "Haute Couture",
+    iconName: "Sparkles",
     displayOrder: 13,
   },
   {
@@ -229,6 +229,26 @@ export const CATALOGUE_SUBCATEGORIES: CatalogueSubcategory[] = [
     displayOrder: 15,
   },
   {
+    id: "sub-luxury-destination",
+    slug: "luxury-destination",
+    categoryId: "wedding-invitations",
+    title: "Luxury Destination Wedding",
+    description: "Tropical coastal sunsets, ocean breeze passport reveal, beach sundowner, and gala night.",
+    badge: "Resort Destination",
+    iconName: "Compass",
+    displayOrder: 16,
+  },
+  {
+    id: "sub-sikh",
+    slug: "sikh",
+    categoryId: "wedding-invitations",
+    title: "Sikh Wedding (Anand Karaj)",
+    description: "Spiritual serenity, golden sunrise lotus unfold, pastel peach, and sacred Gurdwara hymns.",
+    badge: "Spiritual Grace",
+    iconName: "Sun",
+    displayOrder: 90,
+  },
+  {
     id: "sub-modern-minimal",
     slug: "modern-minimal",
     categoryId: "wedding-invitations",
@@ -236,7 +256,7 @@ export const CATALOGUE_SUBCATEGORIES: CatalogueSubcategory[] = [
     description: "Architectural gatefold, crisp linen typography, understated taupe, and chic intimate vibes.",
     badge: "Chic Minimal",
     iconName: "Layers",
-    displayOrder: 16,
+    displayOrder: 91,
   },
   {
     id: "sub-floral-garden",
@@ -246,17 +266,7 @@ export const CATALOGUE_SUBCATEGORIES: CatalogueSubcategory[] = [
     description: "Botanical wildflower blooms, watercolor petal unveil, sage green, and starlit open lawn toasts.",
     badge: "Botanical Whimsy",
     iconName: "Flower",
-    displayOrder: 17,
-  },
-  {
-    id: "sub-luxury-destination",
-    slug: "luxury-destination",
-    categoryId: "wedding-invitations",
-    title: "Luxury Destination Wedding",
-    description: "Tropical coastal sunsets, ocean breeze passport reveal, beach sundowner, and gala night.",
-    badge: "Resort Destination",
-    iconName: "Compass",
-    displayOrder: 18,
+    displayOrder: 92,
   },
   {
     id: "sub-elegant-contemporary",
@@ -266,7 +276,7 @@ export const CATALOGUE_SUBCATEGORIES: CatalogueSubcategory[] = [
     description: "Black-tie glamour, velvet wax-sealed envelope, champagne sparkle, and midnight after-party.",
     badge: "Black Tie Glamour",
     iconName: "GlassWater",
-    displayOrder: 19,
+    displayOrder: 93,
   },
 
   // Birthday Subcategories (Organized by Relationship)
@@ -414,7 +424,7 @@ export const CATALOGUE_TEMPLATES: CatalogueTemplate[] = [
     isActive: true,
   },
 
-  // --- WEDDING COLLECTIONS (10 BESPOKE COLLECTIONS) ---
+  // --- WEDDING COLLECTIONS (ACTIVE BESPOKE SUITES & ARCHIVED PRESETS) ---
   {
     id: "template-wedding-royal-indian",
     slug: "royal-indian-wedding",
@@ -554,6 +564,53 @@ export const CATALOGUE_TEMPLATES: CatalogueTemplate[] = [
     isActive: true,
   },
   {
+    id: "template-wedding-luxury",
+    slug: "luxury-wedding",
+    shortSlug: "luxury",
+    categoryId: "wedding-invitations",
+    subcategoryId: "sub-luxury-wedding",
+    occasionType: "wedding",
+    title: "The Luxury Wedding",
+    designName: "The Haute Couture Folio Collection",
+    collectionLabel: "The Haute Couture Folio Collection",
+    editorialSubtitle: "An ultra-luxury invitation inspired by haute couture stationery, gilded folios, and champagne romance.",
+    tagline: "Gilded Folio Unboxing, Champagne Romance & Haute Couture Opulence",
+    description:
+      "An ultra-luxury wedding invitation inspired by haute couture stationery, featuring rich ivory, champagne gold, deep burgundy wine accents, and editorial typography.",
+    badge: "Haute Couture",
+    culturalTag: "Luxury / Haute Couture",
+    price: 1999,
+    originalPrice: 3999,
+    demoUrl: "/demo/wedding/luxury",
+    previewImage: "/images/templates/wedding-luxury.jpg",
+    cardColorway: {
+      cardBg: "from-[#1C1612] via-[#2A1F18] to-[#120E0B]",
+      cardBorder: "border-[#D4AF37]/50",
+      badgeBg: "bg-[#D4AF37]/15",
+      badgeText: "text-[#D4AF37]",
+      accentGold: "#D4AF37",
+      ornament: "monogram",
+    },
+    features: [
+      "3D Gilded Unboxing Folio & Wax Seal Opening Ceremony",
+      "Couple Monogram & Parents' Family Blessings",
+      "Live Luxury Wedding Countdown Counter",
+      "Multi-Ceremony Schedule with interactive Google Maps & attire guides",
+      "Interactive Venue GPS Navigation & Travel Concierge",
+      "Editorial Love Story Timeline & High-Res Portrait Carousel",
+      "Real-Time VIP Guest RSVP with Multi-Event Attendance & Dietary Intelligence",
+      "Dress Code Guides, Accommodations & WhatsApp Sharing",
+    ],
+    defaultTheme: "champagne-gold",
+    themes: [
+      { id: "champagne-gold", name: "Champagne & Warm Ivory", description: "Bespoke warm ivory, delicate gold foil & linen", previewColor: "#D4AF37" },
+      { id: "burgundy-wine", name: "Deep Burgundy Wine & Gold", description: "Deep royal wine, velvet gold & black tie accents", previewColor: "#58111A" },
+      { id: "onyx-noir", name: "Onyx Noir & Champagne", description: "Timeless black tie glamour, dark obsidian & bullion gold", previewColor: "#1A1A1A" },
+      { id: "emerald-monogram", name: "Imperial Emerald", description: "Regal jewel emerald with antique champagne borders", previewColor: "#0F281E" },
+    ],
+    isActive: true,
+  },
+  {
     id: "template-wedding-sikh",
     slug: "sikh-wedding-anand-karaj",
     shortSlug: "sikh",
@@ -594,7 +651,7 @@ export const CATALOGUE_TEMPLATES: CatalogueTemplate[] = [
       { id: "golden-anand", name: "Golden Sunrise", description: "Pastel peach, pure ivory & warm sunlight gold", previewColor: "#d97706" },
       { id: "royal-crimson", name: "Deep Ruby Bliss", description: "Subtle royal ruby with champagne highlights", previewColor: "#881337" },
     ],
-    isActive: true,
+    isActive: false,
   },
   {
     id: "template-wedding-muslim",
@@ -723,7 +780,7 @@ export const CATALOGUE_TEMPLATES: CatalogueTemplate[] = [
       { id: "minimal-linen", name: "Warm Linen & Slate", description: "Architectural taupe, clean off-white & charcoal", previewColor: "#334155" },
       { id: "velvet-onyx", name: "Monochrome Obsidian", description: "Sharp black, crisp white & champagne", previewColor: "#0f172a" },
     ],
-    isActive: true,
+    isActive: false,
   },
   {
     id: "template-wedding-floral-garden",
@@ -765,7 +822,7 @@ export const CATALOGUE_TEMPLATES: CatalogueTemplate[] = [
       { id: "botanical-sage", name: "Sage Green & Lavender", description: "Organic botanical eucalyptus & lilac", previewColor: "#4d7c0f" },
       { id: "cathedral-rose", name: "Peony Blush & Cream", description: "Romantic peony pink & soft vanilla", previewColor: "#db2777" },
     ],
-    isActive: true,
+    isActive: false,
   },
   {
     id: "template-wedding-luxury-destination",
@@ -850,7 +907,7 @@ export const CATALOGUE_TEMPLATES: CatalogueTemplate[] = [
       { id: "velvet-onyx", name: "Midnight Onyx & Prosecco", description: "Velvet black, champagne gold & silver foil", previewColor: "#1e293b" },
       { id: "royal-crimson", name: "Cabernet Velvet", description: "Rich wine velvet & rose gold", previewColor: "#831843" },
     ],
-    isActive: true,
+    isActive: false,
   },
 
   // --- BIRTHDAY EXPERIENCES (ORGANIZED BY RECIPIENT) ---
@@ -1022,10 +1079,13 @@ export function getTemplateById(id: string): CatalogueTemplate | undefined {
 }
 
 export function getFeaturedTemplates(): CatalogueTemplate[] {
-  return [
-    CATALOGUE_TEMPLATES[0], // Love: Secret World
-    CATALOGUE_TEMPLATES[3], // Wedding: Royal Indian
-    CATALOGUE_TEMPLATES[1], // Anniversary: Forever Story
-    CATALOGUE_TEMPLATES[10], // Birthday: Wonderland
+  const featuredIds = [
+    "template-love-secret-world",
+    "template-wedding-royal-indian",
+    "template-anniversary-forever",
+    "template-birthday-wonderland",
   ];
+  return featuredIds
+    .map((id) => getTemplateById(id))
+    .filter((t): t is CatalogueTemplate => Boolean(t && t.isActive));
 }

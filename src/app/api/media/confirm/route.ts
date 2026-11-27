@@ -25,8 +25,8 @@ export async function POST(req: Request) {
     const effectiveSize = size !== undefined ? size : fileSize;
     const targetProject = projectId || projectSlug;
 
-    if (!key) {
-      return NextResponse.json({ error: "Media key is required" }, { status: 400 });
+    if (!key || typeof key !== "string" || !key.startsWith("uploads/") || key.includes("..")) {
+      return NextResponse.json({ error: "Valid media key is required" }, { status: 400 });
     }
 
     const adminSession = await getAdminSession(req);
@@ -39,6 +39,8 @@ export async function POST(req: Request) {
     if (adminSession && adminSession.role === "admin") {
       isAuthorized = true;
     } else if (customerSession && customerSession.role === "customer") {
+      const allowedPrefixes = [`uploads/customers/${customerSession.userId}/`];
+
       if (targetProject && targetProject !== "general") {
         await connectToDatabase();
         const orConditions: any[] = [
@@ -67,12 +69,22 @@ export async function POST(req: Request) {
             { status: 401 }
           );
         }
-        isAuthorized = true;
-      } else {
-        // Customer general asset
-        isAuthorized = true;
+        if (projectDoc.slug) {
+          allowedPrefixes.push(`uploads/${projectDoc.slug}/`);
+        }
       }
+
+      if (!allowedPrefixes.some((prefix) => key.startsWith(prefix))) {
+        return NextResponse.json(
+          { error: "Forbidden. Media key does not match your authorized folder." },
+          { status: 403 }
+        );
+      }
+      isAuthorized = true;
     } else if (orderId && accessToken) {
+      if (!mongoose.Types.ObjectId.isValid(String(orderId))) {
+        return NextResponse.json({ error: "Invalid orderId format" }, { status: 400 });
+      }
       await connectToDatabase();
       const tokenHash = crypto.createHash("sha256").update(String(accessToken).trim()).digest("hex");
       orderDoc = await Order.findOne({
@@ -81,6 +93,13 @@ export async function POST(req: Request) {
       }).lean();
 
       if (orderDoc && orderDoc.paymentStatus === "paid") {
+        const expectedPrefix = `uploads/orders/${orderDoc._id.toString()}/`;
+        if (!key.startsWith(expectedPrefix)) {
+          return NextResponse.json(
+            { error: "Forbidden. Media key does not belong to this order." },
+            { status: 403 }
+          );
+        }
         isAuthorized = true;
       }
     }

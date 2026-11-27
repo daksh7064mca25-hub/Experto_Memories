@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -17,12 +17,24 @@ import {
   Users,
   ScrollText,
   ExternalLink,
+  MessageSquareHeart,
 } from "lucide-react";
 
 export default function AdminStudioLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -38,6 +50,7 @@ export default function AdminStudioLayout({ children }: { children: React.ReactN
     { label: "Overview & KPIs", href: "/studio", icon: LayoutDashboard },
     { label: "Customer Orders", href: "/studio/orders", icon: ShoppingBag },
     { label: "Customer Accounts", href: "/studio/customers", icon: Users },
+    { label: "Customer Reviews", href: "/studio/reviews", icon: MessageSquareHeart },
     { label: "Customer Websites", href: "/studio/websites", icon: Globe },
     { label: "Catalogue & Themes", href: "/studio/templates", icon: Palette },
     { label: "Media Storage", href: "/studio/media", icon: ImageIcon },
@@ -65,7 +78,15 @@ export default function AdminStudioLayout({ children }: { children: React.ReactN
         </button>
       </div>
 
-      {/* Sidebar for Desktop */}
+      {/* Mobile Backdrop Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-45 transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar for Desktop & Mobile Drawer */}
       <aside
         className={`fixed lg:sticky top-0 h-screen w-64 bg-stone-900 text-stone-300 border-r border-stone-800 z-50 flex flex-col justify-between p-5 transition-transform duration-300 lg:translate-x-0 ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"

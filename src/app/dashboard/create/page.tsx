@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -19,11 +19,23 @@ import {
   Ticket,
   Smile,
   Flame,
+  AlertCircle,
 } from "lucide-react";
 import { ALL_THEME_IDS } from "@/lib/validations/project.schema";
 import { normalizeWeddingCollection } from "@/config/wedding-template";
 
 export const WEDDING_COLLECTION_OPTIONS = [
+  {
+    id: "luxury-wedding",
+    label: "The Luxury Atelier",
+    subtitle: "Haute Couture Folio",
+    theme: "champagne-gold" as const,
+    defaultBride: "Seraphina",
+    defaultGroom: "Alexander",
+    defaultDate: "September 18 – 20, 2026 • Lake Como",
+    defaultTitle: "The Luxury Wedding Celebration 🥂✨",
+    emblem: "🥂",
+  },
   {
     id: "royal-indian",
     label: "The Rajwada",
@@ -58,17 +70,6 @@ export const WEDDING_COLLECTION_OPTIONS = [
     emblem: "🥁",
   },
   {
-    id: "sikh",
-    label: "The Golden Anand",
-    subtitle: "Reverent Anand Karaj",
-    theme: "golden-anand" as const,
-    defaultBride: "Gurleen",
-    defaultGroom: "Manpreet",
-    defaultDate: "October 24 – 25, 2026 • New Delhi",
-    defaultTitle: "The Sacred Anand Karaj Celebration 🌸",
-    emblem: "🌸",
-  },
-  {
     id: "muslim",
     label: "The Noor-e-Nikah",
     subtitle: "Mughal Nikah & Walima",
@@ -91,28 +92,6 @@ export const WEDDING_COLLECTION_OPTIONS = [
     emblem: "🕊️",
   },
   {
-    id: "modern-minimal",
-    label: "The Editorial Gatefold",
-    subtitle: "Architectural Minimal",
-    theme: "minimal-linen" as const,
-    defaultBride: "Maya",
-    defaultGroom: "Kabir",
-    defaultDate: "February 12, 2027 • Mumbai",
-    defaultTitle: "The Architectural Union 🕊️",
-    emblem: "✨",
-  },
-  {
-    id: "floral-garden",
-    label: "The Botanical Bloom",
-    subtitle: "Romantic Garden Lawn",
-    theme: "botanical-sage" as const,
-    defaultBride: "Tara",
-    defaultGroom: "Dev",
-    defaultDate: "March 20 – 21, 2027 • Alibaug",
-    defaultTitle: "The Botanical Garden Union 🌸",
-    emblem: "🌿",
-  },
-  {
     id: "luxury-destination",
     label: "The Coastal Horizon",
     subtitle: "Luxury Seaside Resort",
@@ -122,17 +101,6 @@ export const WEDDING_COLLECTION_OPTIONS = [
     defaultDate: "January 08 – 10, 2027 • Udaipur",
     defaultTitle: "The Coastal Destination Celebration 🌊",
     emblem: "🌊",
-  },
-  {
-    id: "elegant-contemporary",
-    label: "The Black-Tie Velvet",
-    subtitle: "Midnight Velvet Gala",
-    theme: "velvet-onyx" as const,
-    defaultBride: "Natasha",
-    defaultGroom: "Samar",
-    defaultDate: "November 14, 2026 • New Delhi",
-    defaultTitle: "The Black-Tie Velvet Celebration 🍸",
-    emblem: "🍸",
   },
 ];
 
@@ -280,10 +248,34 @@ function CreateCustomerWebsiteInner() {
   );
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [productVisibility, setProductVisibility] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    fetch("/api/settings/pricing", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.pricing?.products) {
+          const map: Record<string, boolean> = {};
+          d.pricing.products.forEach((p: any) => {
+            map[p.slug.toLowerCase()] = p.isActive !== false;
+            map[p.occasionType.toLowerCase()] = p.isActive !== false;
+          });
+          setProductVisibility(map);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const isCurrentOccasionHidden = productVisibility[occasionType.toLowerCase()] === false;
 
   const activeOccasion = OCCASIONS.find((o) => o.type === occasionType) || OCCASIONS[0];
 
   const handleSelectOccasion = (type: "apology" | "anniversary" | "birthday" | "love" | "wedding") => {
+    if (productVisibility[type.toLowerCase()] === false) {
+      setErrorMsg("This experience is currently unavailable for new creations.");
+      return;
+    }
+    setErrorMsg("");
     setOccasionType(type);
     const meta = OCCASIONS.find((o) => o.type === type);
     if (meta) {
@@ -319,6 +311,11 @@ function CreateCustomerWebsiteInner() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isCurrentOccasionHidden) {
+      setErrorMsg("This experience is currently unavailable for new creations. Please select another celebration.");
+      return;
+    }
 
     // Map names according to occasion
     let finalRecipient = recipientName.trim();
@@ -423,25 +420,39 @@ function CreateCustomerWebsiteInner() {
             </span>
           </div>
 
+          {/* Warning Banner if selected occasion is hidden */}
+          {isCurrentOccasionHidden && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center gap-3">
+              <AlertCircle size={18} className="text-amber-600 shrink-0" />
+              <div>
+                <p className="font-bold">This experience is currently unavailable for new creations.</p>
+                <p className="text-[11px] text-amber-800">Please select one of our available celebration experiences below.</p>
+              </div>
+            </div>
+          )}
+
           {/* 4 Premium Selection Cards: Desktop 2 cols, Tablet 2 cols, Mobile 1 col */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {OCCASIONS.map((occ) => {
               const isSelected = occasionType === occ.type;
+              const isHidden = productVisibility[occ.type.toLowerCase()] === false;
               return (
                 <div
                   key={occ.type}
-                  onClick={() => handleSelectOccasion(occ.type)}
+                  onClick={() => !isHidden && handleSelectOccasion(occ.type)}
                   role="button"
-                  tabIndex={0}
+                  tabIndex={isHidden ? -1 : 0}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
+                    if ((e.key === "Enter" || e.key === " ") && !isHidden) {
                       handleSelectOccasion(occ.type);
                     }
                   }}
-                  className={`p-5 sm:p-6 rounded-3xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between text-left relative overflow-hidden group ${
-                    isSelected
-                      ? "border-[#541D2B] bg-[#541D2B]/[0.025] shadow-xl shadow-[#541D2B]/10 ring-2 ring-[#541D2B]/20"
-                      : "border-stone-200 bg-white hover:border-[#541D2B]/40 hover:shadow-md hover:bg-[#FAF7F2]/40"
+                  className={`p-5 sm:p-6 rounded-3xl border-2 transition-all duration-200 flex flex-col justify-between text-left relative overflow-hidden group ${
+                    isHidden
+                      ? "border-stone-200 bg-stone-100/60 opacity-60 cursor-not-allowed"
+                      : isSelected
+                      ? "border-[#541D2B] bg-[#541D2B]/[0.025] shadow-xl shadow-[#541D2B]/10 ring-2 ring-[#541D2B]/20 cursor-pointer"
+                      : "border-stone-200 bg-white hover:border-[#541D2B]/40 hover:shadow-md hover:bg-[#FAF7F2]/40 cursor-pointer"
                   }`}
                 >
                   {/* Selected Pill Accent */}
@@ -452,12 +463,17 @@ function CreateCustomerWebsiteInner() {
                   <div>
                     {/* Header Row: Occasion Badge & Selection Indicator */}
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={`px-3 py-1 rounded-full text-[11px] font-mono font-extrabold tracking-wider uppercase border shadow-2xs ${occ.badgeStyle.bg} ${occ.badgeStyle.text} ${occ.badgeStyle.border}`}
                         >
                           {occ.occasionBadge}
                         </span>
+                        {isHidden && (
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 bg-stone-200 px-2 py-0.5 rounded-full border border-stone-300">
+                            Unavailable
+                          </span>
+                        )}
                         <span className="text-xs text-stone-400 font-serif hidden sm:inline">
                           &bull; {occ.occasionTitle}
                         </span>
@@ -648,7 +664,7 @@ function CreateCustomerWebsiteInner() {
                   Select Cultural Wedding Collection &amp; Ceremony Style:
                 </label>
                 <span className="text-[11px] text-amber-800 font-serif font-medium hidden sm:inline">
-                  10 Bespoke Ceremonial Traditions Available
+                  7 Bespoke Wedding Collections Available
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
@@ -941,14 +957,20 @@ function CreateCustomerWebsiteInner() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-full font-serif font-bold text-xs bg-[#541D2B] hover:bg-[#3D141F] text-white shadow-xl shadow-[#541D2B]/15 transition-all hover:scale-102 flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={loading || isCurrentOccasionHidden}
+              className={`w-full sm:w-auto px-8 py-3.5 rounded-full font-serif font-bold text-xs bg-[#541D2B] hover:bg-[#3D141F] text-white shadow-xl shadow-[#541D2B]/15 transition-all flex items-center justify-center gap-2 ${
+                loading || isCurrentOccasionHidden
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-102"
+              }`}
             >
               {loading ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
                   <span>Creating Draft...</span>
                 </>
+              ) : isCurrentOccasionHidden ? (
+                <span>Experience Unavailable</span>
               ) : (
                 <>
                   <span>Open In Visual Editor</span>

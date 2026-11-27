@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Volume2, Sparkles, Feather } from "lucide-react";
+import { Play, Pause, RotateCcw, Volume2, Feather } from "lucide-react";
 import { LetterSectionConfig, ThemeId } from "@/types/website";
 import { THEMES } from "@/config/themes";
 
@@ -10,44 +10,118 @@ interface Props {
   recipientName: string;
   senderName: string;
   theme: ThemeId;
+  typingStatus?: "waiting" | "writing" | "completed";
+  onTypingStatusChange?: (status: "waiting" | "writing" | "completed") => void;
 }
 
-export function LetterSection({ config, recipientName, senderName, theme }: Props) {
+export function LetterSection({
+  config,
+  recipientName,
+  senderName,
+  theme,
+  typingStatus = "writing",
+  onTypingStatusChange,
+}: Props) {
   const themeConfig = THEMES[theme] || THEMES["cotton-candy"];
   const fullText = (config.paragraphs || []).join("\n\n");
-  
-  const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(config.enableTypewriter ?? true);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Typewriter effect
+  const [displayedText, setDisplayedText] = useState(() => {
+    if (!config.enableTypewriter || typingStatus === "completed") {
+      return fullText;
+    }
+    return "";
+  });
+
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (!config.enableTypewriter || typingStatus === "completed") {
+      return fullText.length;
+    }
+    return 0;
+  });
+
+  // Handle external status changes (e.g. user clicks "Okay, tell me ❤️")
   useEffect(() => {
     if (!config.enableTypewriter) {
-      setDisplayedText(fullText);
+      Promise.resolve().then(() => {
+        setDisplayedText(fullText);
+        setCurrentIndex(fullText.length);
+        setIsTyping(false);
+      });
       return;
     }
 
+    if (typingStatus === "waiting") {
+      Promise.resolve().then(() => {
+        setDisplayedText("");
+        setCurrentIndex(0);
+        setIsTyping(false);
+      });
+    } else if (typingStatus === "writing") {
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      queueMicrotask(() => {
+        if (prefersReducedMotion) {
+          setDisplayedText(fullText);
+          setCurrentIndex(fullText.length);
+          setIsTyping(false);
+          onTypingStatusChange?.("completed");
+        } else {
+          setIsTyping(true);
+        }
+      });
+    } else if (typingStatus === "completed") {
+      queueMicrotask(() => {
+        setDisplayedText(fullText);
+        setCurrentIndex(fullText.length);
+        setIsTyping(false);
+      });
+    }
+  }, [typingStatus, config.enableTypewriter, fullText, onTypingStatusChange]);
+
+  // Gentle, emotional typewriter typing loop
+  useEffect(() => {
+    if (!config.enableTypewriter) return;
     if (!isTyping) return;
 
     if (currentIndex < fullText.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText((prev) => prev + fullText[currentIndex]);
+      const char = fullText[currentIndex];
+
+      // Natural cadence: subtle emotional pauses on punctuation and paragraph breaks
+      let delay = 24;
+      if (char === "." || char === "!" || char === "?") {
+        delay = 180;
+      } else if (char === "," || char === ";" || char === ":") {
+        delay = 100;
+      } else if (char === "\n") {
+        delay = 180;
+      }
+
+      const timer = setTimeout(() => {
+        setDisplayedText(fullText.slice(0, currentIndex + 1));
         setCurrentIndex((prev) => prev + 1);
-      }, 25);
-      return () => clearTimeout(timeout);
+      }, delay);
+
+      return () => clearTimeout(timer);
     } else {
-      setIsTyping(false);
+      Promise.resolve().then(() => {
+        setIsTyping(false);
+        onTypingStatusChange?.("completed");
+      });
     }
-  }, [currentIndex, isTyping, fullText, config.enableTypewriter]);
+  }, [currentIndex, isTyping, fullText, config.enableTypewriter, onTypingStatusChange]);
 
   const toggleTyping = () => {
     if (currentIndex >= fullText.length) {
-      // Reset
+      // Replay
       setDisplayedText("");
       setCurrentIndex(0);
       setIsTyping(true);
+      onTypingStatusChange?.("writing");
     } else {
-      setIsTyping(!isTyping);
+      setIsTyping((prev) => !prev);
     }
   };
 
@@ -55,10 +129,15 @@ export function LetterSection({ config, recipientName, senderName, theme }: Prop
     setDisplayedText(fullText);
     setCurrentIndex(fullText.length);
     setIsTyping(false);
+    onTypingStatusChange?.("completed");
   };
 
   return (
-    <section id="sec-letter" className="py-16 px-4 max-w-2xl mx-auto">
+    <section
+      id="sec-letter"
+      data-typing-status={typingStatus}
+      className="py-16 px-4 max-w-2xl mx-auto"
+    >
       {/* Paper Container */}
       <div
         className={`relative ${themeConfig.paperBgClass} rounded-2xl p-6 sm:p-10 shadow-2xl border transition-all duration-300`}
@@ -86,7 +165,11 @@ export function LetterSection({ config, recipientName, senderName, theme }: Prop
         </div>
 
         {/* Letter Body - Caveat handwritten look */}
-        <div className="font-handwriting text-2xl sm:text-3xl leading-relaxed text-stone-800 dark:text-rose-100 space-y-4 min-h-[160px] whitespace-pre-line tracking-wide">
+        <div
+          data-testid="letter-body"
+          data-char-count={displayedText.length}
+          className="font-handwriting text-2xl sm:text-3xl leading-relaxed text-stone-800 dark:text-rose-100 space-y-4 min-h-[160px] whitespace-pre-line tracking-wide"
+        >
           {displayedText}
           {isTyping && <span className="inline-block w-1.5 h-6 bg-pink-500 animate-pulse ml-1 align-middle" />}
         </div>
@@ -102,12 +185,13 @@ export function LetterSection({ config, recipientName, senderName, theme }: Prop
         </div>
 
         {/* Controls for typewriter */}
-        {config.enableTypewriter && (
+        {config.enableTypewriter && typingStatus !== "waiting" && (
           <div className="mt-6 pt-4 flex items-center justify-between border-t border-rose-100 dark:border-pink-950/40 text-xs">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleTyping}
+                data-testid="letter-toggle-typing-btn"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-100/70 hover:bg-rose-200/80 dark:bg-pink-950/50 text-rose-800 dark:text-pink-200 transition-colors"
               >
                 {currentIndex >= fullText.length ? (
@@ -132,6 +216,7 @@ export function LetterSection({ config, recipientName, senderName, theme }: Prop
                 <button
                   type="button"
                   onClick={showAllText}
+                  data-testid="letter-show-full-btn"
                   className="px-2 py-1.5 text-rose-600 dark:text-pink-300 hover:underline"
                 >
                   Show full letter
@@ -156,4 +241,3 @@ export function LetterSection({ config, recipientName, senderName, theme }: Prop
     </section>
   );
 }
-

@@ -8,18 +8,28 @@ import { THEMES } from "@/config/themes";
 interface Props {
   config: ReadyCheckSectionConfig;
   theme: ThemeId;
+  onAccept?: () => void;
 }
 
-export function ReadyCheckSection({ config, theme }: Props) {
+export function ReadyCheckSection({ config, theme, onAccept }: Props) {
   const [response, setResponse] = useState<"accepted" | "waiting" | null>(null);
   const themeConfig = THEMES[theme] || THEMES["cotton-candy"];
 
   const handleAccept = () => {
+    if (response === "accepted") return;
     setResponse("accepted");
+    onAccept?.();
     const letterElem = document.getElementById("sec-letter");
     if (letterElem) {
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
       setTimeout(() => {
-        letterElem.scrollIntoView({ behavior: "smooth" });
+        letterElem.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start",
+        });
       }, 500);
     }
   };
@@ -55,6 +65,7 @@ export function ReadyCheckSection({ config, theme }: Props) {
             <button
               type="button"
               onClick={handleAccept}
+              data-testid="ready-accept-btn"
               className={`w-full sm:w-auto px-6 py-3.5 rounded-full font-serif font-semibold text-base transition-transform active:scale-95 ${themeConfig.primaryButtonClass}`}
             >
               {config.acceptButtonText || "Okay, tell me ❤️"}
@@ -63,6 +74,7 @@ export function ReadyCheckSection({ config, theme }: Props) {
             <button
               type="button"
               onClick={handleWait}
+              data-testid="ready-wait-btn"
               className={`w-full sm:w-auto px-6 py-3.5 rounded-full font-serif font-medium text-base transition-transform active:scale-95 ${themeConfig.secondaryButtonClass}`}
             >
               {config.waitButtonText || "Let me think..."}
@@ -83,6 +95,7 @@ export function ReadyCheckSection({ config, theme }: Props) {
             <button
               type="button"
               onClick={handleAccept}
+              data-testid="ready-resume-btn"
               className={`px-5 py-2.5 rounded-full text-xs font-serif font-semibold ${themeConfig.primaryButtonClass}`}
             >
               I&apos;m ready now, show me the letter 🌸

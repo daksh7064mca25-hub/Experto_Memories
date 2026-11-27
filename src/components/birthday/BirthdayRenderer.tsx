@@ -13,6 +13,7 @@ import { BirthdayScrapbookSection } from "./sections/BirthdayScrapbookSection";
 import { BirthdayGameSection } from "./sections/BirthdayGameSection";
 import { BirthdayLetterSection } from "./sections/BirthdayLetterSection";
 import { BirthdayFinaleSection } from "./sections/BirthdayFinaleSection";
+import { ExpertoMemoriesBrandSignature } from "@/components/common/ExpertoMemoriesBrandSignature";
 
 interface Props {
   project: WebsiteProjectData;
@@ -92,7 +93,10 @@ export function BirthdayRenderer({ project, previewMode = false }: Props) {
             key={`${sec.id}-${replayKey}`}
             config={sec.config as any}
             recipientName={recipient}
+            senderName={sender}
             theme={theme}
+            projectSlug={project.slug || project._id}
+            previewMode={previewMode}
           />
         );
       case "birthday_letter":
@@ -143,6 +147,13 @@ export function BirthdayRenderer({ project, previewMode = false }: Props) {
             {renderSection(sec)}
           </div>
         ))}
+
+        {/* Official ExpertoMemories Brand Signature */}
+        <ExpertoMemoriesBrandSignature
+          occasionType="birthday"
+          theme={theme}
+          previewMode={previewMode}
+        />
       </main>
     </div>
   );

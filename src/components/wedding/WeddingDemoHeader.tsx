@@ -9,40 +9,31 @@ interface Props {
 }
 
 const WEDDING_DEMO_LINKS = [
+  { slug: "luxury", label: "Luxury Wedding" },
   { slug: "royal", label: "Royal Indian" },
   { slug: "hindu", label: "Traditional Hindu" },
   { slug: "punjabi", label: "Punjabi" },
-  { slug: "sikh", label: "Sikh (Anand Karaj)" },
   { slug: "muslim", label: "Muslim (Nikah)" },
   { slug: "christian", label: "Christian" },
-  { slug: "minimal", label: "Modern Minimal" },
-  { slug: "floral", label: "Floral Garden" },
   { slug: "destination", label: "Destination" },
-  { slug: "contemporary", label: "Contemporary" },
 ];
 
 export const WeddingDemoHeader: React.FC<Props> = ({ currentCollection }) => {
   const norm = (currentCollection || "royal").toLowerCase();
-  const activeSlug = norm.includes("royal")
+  const activeSlug = norm.includes("luxury")
+    ? "luxury"
+    : norm.includes("royal")
     ? "royal"
     : norm.includes("hindu") || norm.includes("vivah")
     ? "hindu"
     : norm.includes("punjabi")
     ? "punjabi"
-    : norm.includes("sikh") || norm.includes("anand")
-    ? "sikh"
     : norm.includes("muslim") || norm.includes("nikah")
     ? "muslim"
     : norm.includes("christian")
     ? "christian"
-    : norm.includes("minimal")
-    ? "minimal"
-    : norm.includes("floral")
-    ? "floral"
     : norm.includes("destination") || norm.includes("coastal")
     ? "destination"
-    : norm.includes("contemporary") || norm.includes("velvet")
-    ? "contemporary"
     : "royal";
 
   return (
@@ -65,7 +56,7 @@ export const WeddingDemoHeader: React.FC<Props> = ({ currentCollection }) => {
           </span>
         </div>
 
-        {/* 10 Cultural Switcher Pills */}
+        {/* 7 Cultural Switcher Pills */}
         <div className="pointer-events-auto flex items-center gap-1 bg-black/80 backdrop-blur-md p-1 rounded-full border border-white/20 shadow-xl overflow-x-auto max-w-[calc(100vw-110px)] sm:max-w-[70vw]">
           {WEDDING_DEMO_LINKS.map((item) => {
             const isActive = activeSlug === item.slug;

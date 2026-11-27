@@ -22,7 +22,8 @@ export type WeddingThemeId =
   | "minimal-linen"
   | "velvet-onyx"
   | "botanical-sage"
-  | "coastal-azure";
+  | "coastal-azure"
+  | "champagne-gold";
 
 export type ThemeId =
   | ApologyThemeId
@@ -46,6 +47,7 @@ export type ApologySectionType =
   | "secret_heart";
 
 export type AnniversarySectionType =
+  | "anniversary_envelope"
   | "anniversary_intro"
   | "anniversary_counter"
   | "anniversary_first_met"
@@ -55,6 +57,13 @@ export type AnniversarySectionType =
   | "anniversary_museum"
   | "anniversary_gallery"
   | "anniversary_quiz"
+  | "anniversary_memory_match"
+  | "anniversary_scratch"
+  | "anniversary_promises"
+  | "anniversary_whatsapp"
+  | "anniversary_spin_wheel"
+  | "anniversary_moon"
+  | "anniversary_playlist"
   | "anniversary_constellation"
   | "anniversary_love_notes"
   | "anniversary_soundtrack"
@@ -74,12 +83,17 @@ export type BirthdaySectionType =
 
 export type LoveSectionType =
   | "love_invitation"
+  | "love_photo_reveal"
   | "love_question"
+  | "love_timeline"
   | "love_reasons"
+  | "love_counter"
   | "love_universe"
   | "love_puzzle"
   | "love_gallery"
   | "love_letter"
+  | "love_surprise_gift"
+  | "love_playlist"
   | "love_soundtrack"
   | "love_surprise";
 
@@ -93,6 +107,7 @@ export type WeddingSectionType =
   | "wedding_soundtrack"
   | "wedding_rsvp"
   | "wedding_travel"
+  | "wedding_registry"
   | "wedding_wishes";
 
 export type SectionType =
@@ -245,6 +260,7 @@ export interface CouponBookConfig {
   headline: string;
   subtext: string;
   coupons: ApologyCoupon[];
+  maxRedemptions?: number;
 }
 
 export interface CatchLoveGameConfig {
@@ -286,6 +302,19 @@ export interface TimelineMilestone {
   tag?: string;
 }
 
+export interface AnniversaryEnvelopeConfig {
+  headline?: string;
+  recipientName?: string;
+  senderName?: string;
+  waxSealColor?: string;
+  waxSealInitial?: string;
+  envelopeColor?: string;
+  teaserText?: string;
+  stampText?: string;
+  buttonText?: string;
+  allowSkip?: boolean;
+}
+
 export interface AnniversaryIntroConfig {
   headline: string;
   subheadline: string;
@@ -293,6 +322,8 @@ export interface AnniversaryIntroConfig {
   coupleNames?: string;
   anniversaryDate?: string;
   yearsTogetherText?: string;
+  couplePhotoUrl?: string;
+  personalMessage?: string;
 }
 
 export interface AnniversaryTimelineConfig {
@@ -399,6 +430,7 @@ export interface AnniversaryCounterConfig {
   headline: string;
   subtext: string;
   relationshipStartDate?: string;
+  nextAnniversaryDate?: string;
   showSeconds: boolean;
   milestoneMessage?: string;
 }
@@ -445,6 +477,112 @@ export interface AnniversaryMuseumConfig {
   headline: string;
   subtext: string;
   exhibits: AnniversaryMuseumExhibit[];
+}
+
+export interface AnniversaryMemoryMatchCard {
+  id: string;
+  label: string;
+  iconOrImageUrl: string;
+  type: "icon" | "image";
+}
+
+export interface AnniversaryMemoryMatchConfig {
+  headline: string;
+  subtext: string;
+  cards: AnniversaryMemoryMatchCard[];
+  winTitle: string;
+  winMessage: string;
+}
+
+export interface AnniversaryScratchConfig {
+  headline: string;
+  subtext: string;
+  coverTitle: string;
+  coverSubtitle: string;
+  secretMessage?: string;
+  secretPhotoUrl?: string;
+  photoUrl?: string;
+  photoCaption?: string;
+  foilColor?: string;
+  buttonText?: string;
+}
+
+export interface AnniversaryPromiseCardItem {
+  id: string;
+  title: string;
+  promise: string;
+  icon?: string;
+  revealed?: boolean;
+}
+
+export interface AnniversaryPromisesConfig {
+  headline: string;
+  subtext: string;
+  promises: AnniversaryPromiseCardItem[];
+}
+
+export interface AnniversaryWhatsAppMetrics {
+  totalMessages: number;
+  partner1Name: string;
+  partner1Messages: number;
+  partner2Name: string;
+  partner2Messages: number;
+  firstMessageDate?: string;
+  mostActiveDay?: string;
+  mostActiveHour?: string;
+  loveEmojisCount: number;
+  topWords?: { word: string; count: number }[];
+  funFact?: string;
+}
+
+export interface AnniversaryWhatsAppConfig {
+  headline: string;
+  subtext: string;
+  metrics?: AnniversaryWhatsAppMetrics;
+  placeholderMetrics?: AnniversaryWhatsAppMetrics;
+  allowClientUpload: boolean;
+}
+
+export interface AnniversaryPlaylistTrack {
+  id: string;
+  title: string;
+  artist: string;
+  albumArtUrl?: string;
+  audioUrl?: string;
+  spotifyUrl?: string;
+  appleMusicUrl?: string;
+  youtubeUrl?: string;
+  notes?: string;
+}
+
+export interface AnniversaryPlaylistConfig {
+  headline: string;
+  subtext: string;
+  tracks: AnniversaryPlaylistTrack[];
+}
+
+export interface AnniversaryWheelOption {
+  id: string;
+  label: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface AnniversarySpinWheelConfig {
+  headline: string;
+  subtext: string;
+  options: AnniversaryWheelOption[];
+  footerNote?: string;
+  buttonText?: string;
+}
+
+export interface AnniversaryMoonConfig {
+  headline: string;
+  subtext?: string;
+  meetingDate?: string;
+  location?: string;
+  personalMessage?: string;
 }
 
 // --- BIRTHDAY PRODUCT STRUCTURES ---
@@ -494,12 +632,70 @@ export interface BirthdayScrapbookConfig {
   photos: PolaroidPhoto[];
 }
 
+export type BirthdaySurpriseCategory =
+  | "voucher"
+  | "activity"
+  | "promise"
+  | "favor"
+  | "heartfelt"
+  | "comedy"
+  | "experience";
+
+export type BirthdaySurpriseIcon =
+  | "gift"
+  | "heart"
+  | "sparkles"
+  | "coffee"
+  | "trophy"
+  | "cake"
+  | "plane"
+  | "star"
+  | "music"
+  | "compass"
+  | "smile"
+  | "ticket";
+
+export interface BirthdaySurpriseItem {
+  id: string;
+  title: string;
+  description?: string;
+  redemptionInstructions?: string;
+  badge?: string;
+  icon?: BirthdaySurpriseIcon;
+  category?: BirthdaySurpriseCategory;
+  enabled: boolean;
+  order: number;
+}
+
+export interface BirthdayScratchReward {
+  id: string;
+  title: string;
+  description?: string;
+  redemptionInstructions?: string;
+  icon?: BirthdaySurpriseIcon;
+  badge?: string;
+  category?: BirthdaySurpriseCategory;
+  enabled?: boolean;
+}
+
 export interface BirthdayGameConfig {
   headline: string;
   subtext: string;
-  scratchMessage: string;
-  secretGiftText: string;
-  gameType: "scratch" | "mystery_box";
+  relationship?: string;
+  gameType?: "scratch" | "mystery_box";
+  mode?: "custom" | "random";
+  customReward?: BirthdayScratchReward;
+  randomRewards?: BirthdayScratchReward[];
+  selectedRewardId?: string;
+  revealedReward?: BirthdayScratchReward;
+  previewRewardId?: string;
+  // Legacy fields preserved for backward compatibility
+  surprises?: BirthdaySurpriseItem[];
+  allowMultipleScratches?: boolean;
+  scratchPercentageToReveal?: number;
+  previewSurpriseIndex?: number;
+  scratchMessage?: string;
+  secretGiftText?: string;
 }
 
 export interface BirthdayLetterConfig {
@@ -639,6 +835,80 @@ export interface LoveSurpriseConfig {
   whatsappShareText?: string;
 }
 
+export interface LovePhotoRevealConfig {
+  headline: string;
+  subtext: string;
+  photoUrl: string;
+  caption: string;
+  loveNote: string;
+  scratchPromptText?: string;
+  buttonText?: string;
+}
+
+export interface LoveTimelineItem {
+  id: string;
+  title: string;
+  date: string;
+  description: string;
+  photoUrl?: string;
+  tag?: string;
+}
+
+export interface LoveTimelineConfig {
+  headline: string;
+  subtext: string;
+  items: LoveTimelineItem[];
+}
+
+export interface LoveCounterConfig {
+  headline: string;
+  subtext: string;
+  startDate: string;
+  counterLabel?: string;
+  milestoneBadge?: string;
+  milestoneBadgeText?: string;
+  customMetrics?: { label: string; value: string }[];
+  metric1Label?: string;
+  metric1Value?: string;
+  metric2Label?: string;
+  metric2Value?: string;
+  metric3Label?: string;
+  metric3Value?: string;
+}
+
+export interface LoveSurpriseGiftItem {
+  id: string;
+  title: string;
+  description: string;
+  tag: string;
+}
+
+export interface LoveSurpriseGiftConfig {
+  headline: string;
+  subtext: string;
+  giftTitle: string;
+  giftDescription: string;
+  couponCode?: string;
+  redeemPrompt?: string;
+  photoUrl?: string;
+  surprises?: LoveSurpriseGiftItem[];
+}
+
+export interface LovePlaylistTrack {
+  id: string;
+  title: string;
+  artist: string;
+  audioUrl?: string;
+  personalNote: string;
+  duration?: string;
+}
+
+export interface LovePlaylistConfig {
+  headline: string;
+  subtext: string;
+  tracks: LovePlaylistTrack[];
+}
+
 // --- WEDDING PRODUCT STRUCTURES ---
 
 export interface WeddingEventData {
@@ -656,6 +926,7 @@ export interface WeddingEventData {
 }
 
 export type WeddingRevealStyle =
+  | "hindu_mandir"
   | "palace_doors"
   | "mandap_garland"
   | "phulkari_dhol"
@@ -666,6 +937,8 @@ export type WeddingRevealStyle =
   | "blooming_petals"
   | "passport_boarding"
   | "velvet_wax_seal"
+  | "wax_seal"
+  | "gilded_folio"
   // Legacy / fallback styles
   | "wax_envelope"
   | "floral_gate"
@@ -683,6 +956,10 @@ export interface WeddingOpeningConfig {
   audioNotice?: string;
   religiousBlessingText?: string; // Optional customer-controlled sacred invocation
   culturalSymbol?: string;        // e.g. "kalash", "lotus", "crescent", "cross", "rings", "monogram"
+  soundEnabled?: boolean;
+  modelUrl?: string;              // Optional custom GLB/GLTF 3D temple model URL
+  transitionVideoUrl?: string;    // Optional cinematic transition video URL
+  heroBackgroundImageUrl?: string;// Optional royal palace hero background image URL
 }
 
 export interface WeddingCoupleConfig {
@@ -755,6 +1032,9 @@ export interface WeddingRSVPConfig {
 export interface WeddingTravelConfig {
   headline: string;
   subtext: string;
+  venueName?: string;
+  venueAddress?: string;
+  googleMapsUrl?: string;
   nearestAirport?: string;
   nearestRailway?: string;
   hotelAccommodations?: string;
@@ -763,12 +1043,26 @@ export interface WeddingTravelConfig {
   conciergePhone?: string;
 }
 
+export interface WeddingRegistryConfig {
+  headline: string;
+  subtext: string;
+  message?: string;
+  enableBankDetails?: boolean;
+  bankName?: string;
+  accountHolder?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  upiId?: string;
+  registryNote?: string;
+}
+
 export interface WeddingWishesConfig {
   headline: string;
   subtext: string;
   closingNote: string;
   familySignoff: string;
   whatsappShareText?: string;
+  coupleNames?: string;
 }
 
 // --- MASTER WEBSITE PROJECT SCHEMA ---
@@ -806,6 +1100,7 @@ export interface WebsiteProjectData {
   };
   theme: ThemeId;
   sections: WebsiteSectionData[];
+  couponRedemptions?: Record<string, string>;
   audioSettings: AudioSettings;
   status: ProjectStatus;
   paymentStatus?: ProjectPaymentStatus;

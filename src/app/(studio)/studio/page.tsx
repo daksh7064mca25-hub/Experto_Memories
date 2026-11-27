@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -31,7 +31,7 @@ export default function AdminOverviewDashboard() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const fetchOverview = async () => {
+  const fetchOverview = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMsg("");
@@ -51,11 +51,13 @@ export default function AdminOverviewDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    fetchOverview();
-  }, []);
+    Promise.resolve().then(() => {
+      fetchOverview();
+    });
+  }, [fetchOverview]);
 
   if (loading) {
     return (

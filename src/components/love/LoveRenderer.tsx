@@ -1,156 +1,80 @@
 "use client";
 
 import React, { useState } from "react";
-import { WebsiteProjectData, WebsiteSectionData } from "@/types/website";
+import { WebsiteProjectData } from "@/types/website";
 import { getLoveThemeConfig } from "@/config/love-themes";
 import { LovePetals } from "./effects/LovePetals";
 import { LoveMusicPlayer } from "./audio/LoveMusicPlayer";
-import { LoveInvitationSection } from "./sections/LoveInvitationSection";
-import { LoveQuestionSection } from "./sections/LoveQuestionSection";
-import { LoveReasonsSection } from "./sections/LoveReasonsSection";
-import { LoveUniverseSection } from "./sections/LoveUniverseSection";
-import { LovePuzzleSection } from "./sections/LovePuzzleSection";
-import { LoveGallerySection } from "./sections/LoveGallerySection";
-import { LoveLetterSection } from "./sections/LoveLetterSection";
-import { LoveSurpriseSection } from "./sections/LoveSurpriseSection";
+import { LoveBookEngine } from "./book/LoveBookEngine";
 
 interface Props {
   project: WebsiteProjectData;
   previewMode?: boolean;
+  viewport?: "mobile" | "desktop";
 }
 
-export function LoveRenderer({ project, previewMode = false }: Props) {
+export function LoveRenderer({ project, previewMode = false, viewport }: Props) {
   const [replayKey, setReplayKey] = useState(0);
 
   const themeConfig = getLoveThemeConfig(project.theme);
-  const recipient = project.recipientName || project.partner1Name || "My Love";
-  const sender = project.senderName || project.partner2Name || "Forever Yours";
-
-  const handleReplay = () => {
-    setReplayKey((k) => k + 1);
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  // Filter enabled sections and sort by order
-  const activeSections = (project.sections || [])
-    .filter((s) => s.enabled !== false)
-    .sort((a, b) => a.order - b.order);
-
-  const renderSection = (section: WebsiteSectionData) => {
-    switch (section.type) {
-      case "love_invitation":
-        return (
-          <LoveInvitationSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            recipientName={recipient}
-            senderName={sender}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_question":
-        return (
-          <LoveQuestionSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            recipientName={recipient}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_reasons":
-        return (
-          <LoveReasonsSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_universe":
-        return (
-          <LoveUniverseSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_puzzle":
-        return (
-          <LovePuzzleSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_gallery":
-        return (
-          <LoveGallerySection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_letter":
-        return (
-          <LoveLetterSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            recipientName={recipient}
-            senderName={sender}
-            theme={themeConfig}
-          />
-        );
-
-      case "love_soundtrack":
-        // Ambient player is docked via LoveMusicPlayer
-        return null;
-
-      case "love_surprise":
-        return (
-          <LoveSurpriseSection
-            key={`${section.id}-${replayKey}`}
-            config={section.config as any}
-            recipientName={recipient}
-            senderName={sender}
-            theme={themeConfig}
-            onReplay={handleReplay}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
 
   return (
     <div
       key={replayKey}
-      className={`relative min-h-screen w-full transition-colors duration-500 overflow-x-hidden ${themeConfig.bgClass}`}
+      className="relative min-h-screen w-full flex flex-col items-center justify-between select-none overflow-x-hidden"
+      style={{
+        background:
+          "radial-gradient(circle at 50% 28%, #FFFDF9 0%, #FDF4ED 40%, #F8E8DF 75%, #F0D9CD 100%)",
+      }}
       data-theme={project.theme}
     >
-      {/* Delicate floating rose petals and starlight particles */}
+      {/* GENTLE NATURAL SUNLIGHT WASH */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 245, 238, 0.35) 45%, rgba(245, 225, 218, 0.1) 100%)",
+        }}
+      />
+
+      {/* SUBTLE ARTISAN LINEN & PAPER SURFACE TEXTURE */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.035]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* DELICATE BLURRED BOTANICAL & PALE ROSE VIGNETTES AT EDGES */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-40"
+        style={{
+          background:
+            "radial-gradient(circle at 0% 0%, rgba(244, 180, 190, 0.22) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(240, 195, 185, 0.22) 0%, transparent 45%), radial-gradient(circle at 100% 0%, rgba(255, 215, 200, 0.18) 0%, transparent 35%)",
+        }}
+      />
+
+      {/* DELICATE FLOATING ROSE PETALS (SLOW & SUBTLE) */}
       <LovePetals theme={project.theme} />
 
-      {/* Docked Ambient Romantic Soundtrack Player */}
+      {/* DOCKED AMBIENT ROMANTIC SOUNDTRACK PLAYER */}
       <LoveMusicPlayer
         audioSettings={project.audioSettings}
         previewMode={previewMode}
       />
 
-      {/* Main Interactive Story Experience */}
-      <main className="relative z-10 w-full max-w-5xl mx-auto pb-16">
-        {activeSections.map((sec) => (
-          <div key={sec.id} className="w-full">
-            {renderSection(sec)}
-          </div>
-        ))}
+      {/* MAIN INTERACTIVE DIGITAL LOVE BOOK */}
+      <main className="relative z-10 w-full flex-1 flex flex-col items-center justify-center py-4 sm:py-8 px-1 sm:px-4">
+        <LoveBookEngine
+          key={`${viewport || "responsive"}-${replayKey}`}
+          project={project}
+          theme={themeConfig}
+          previewMode={previewMode}
+          viewport={viewport}
+        />
       </main>
     </div>
   );

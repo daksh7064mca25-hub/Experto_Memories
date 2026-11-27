@@ -280,7 +280,16 @@ export async function DELETE(req: Request) {
     }
 
     await connectToDatabase();
-    const asset = id ? await MediaAsset.findById(id) : await MediaAsset.findOne({ key });
+    const mongoose = await import("mongoose");
+    let asset = null;
+    if (id) {
+      if (!mongoose.default.Types.ObjectId.isValid(id)) {
+        return NextResponse.json({ error: "Invalid asset ID" }, { status: 400 });
+      }
+      asset = await MediaAsset.findById(id);
+    } else if (key) {
+      asset = await MediaAsset.findOne({ key });
+    }
 
     if (asset) {
       if (asset.key && isR2Configured()) {

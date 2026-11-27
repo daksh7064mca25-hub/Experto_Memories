@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IAdminAuditLogDoc extends Document {
   actor: string;
   action: string;
-  targetType: "order" | "customer" | "website" | "domain" | "pricing" | "catalogue" | "system";
+  targetType: "order" | "customer" | "website" | "domain" | "pricing" | "catalogue" | "system" | "review";
   targetId?: string;
   targetIdentifier?: string;
   details?: Record<string, any>;
@@ -30,7 +30,7 @@ const AdminAuditLogSchema = new Schema<IAdminAuditLogDoc>(
     targetType: {
       type: String,
       required: true,
-      enum: ["order", "customer", "website", "domain", "pricing", "catalogue", "system"],
+      enum: ["order", "customer", "website", "domain", "pricing", "catalogue", "system", "review"],
       index: true,
     },
     targetId: {

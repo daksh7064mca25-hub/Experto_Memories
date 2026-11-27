@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
+import { WebsiteProject } from "@/models/WebsiteProject";
 import { getAdminSession } from "@/lib/auth";
 import { logAdminAction } from "@/lib/audit";
 
@@ -72,6 +73,17 @@ export async function POST(req: Request, context: Context) {
     });
 
     await order.save();
+
+    // Revert associated WebsiteProject paymentStatus back to unpaid
+    if (order.projectId) {
+      try {
+        await WebsiteProject.findByIdAndUpdate(order.projectId, {
+          paymentStatus: "unpaid",
+        });
+      } catch (projErr) {
+        console.error("Warning: Failed to revert project paymentStatus on reject:", projErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,

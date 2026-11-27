@@ -11,9 +11,30 @@ import {
   ConstellationStar,
   AnniversaryLoveNote,
   BucketListItem,
+  AnniversaryMemoryMatchCard,
+  AnniversaryPromiseCardItem,
+  AnniversaryWheelOption,
 } from "@/types/website";
-import { Plus, Trash2, Heart, Sparkles, Image as ImageIcon, Music, HelpCircle, Star, Calendar, BookmarkCheck } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Heart,
+  Sparkles,
+  Image as ImageIcon,
+  Music,
+  HelpCircle,
+  Star,
+  Calendar,
+  BookmarkCheck,
+  Gift,
+  MessageSquare,
+  Upload,
+  Check,
+  ShieldCheck,
+  Moon,
+} from "lucide-react";
 import { MediaUploader } from "./MediaUploader";
+import { parseWhatsAppChatExport } from "@/lib/whatsapp-parser";
 
 interface Props {
   project: WebsiteProjectData;
@@ -227,6 +248,65 @@ export function AnniversarySectionControls({
         </h3>
       </div>
 
+      {/* SECTION 0: WAX SEAL ENVELOPE OPENING */}
+      {type === "anniversary_envelope" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Top Headline
+            </label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              placeholder="A Celebration of Our Love"
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Envelope Teaser Quote
+            </label>
+            <textarea
+              rows={2}
+              value={config.teaserText || ""}
+              onChange={(e) => update({ teaserText: e.target.value })}
+              placeholder="Every love story is beautiful, but ours is my absolute favorite."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">
+                Wax Seal Initial / Emblem
+              </label>
+              <input
+                type="text"
+                maxLength={4}
+                value={config.waxSealInitial || ""}
+                onChange={(e) => update({ waxSealInitial: e.target.value })}
+                placeholder="❤️ or S"
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">
+                Open Button Text
+              </label>
+              <input
+                type="text"
+                value={config.buttonText || ""}
+                onChange={(e) => update({ buttonText: e.target.value })}
+                placeholder="Open Your Surprise"
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SECTION 1: INTRODUCTION */}
       {type === "anniversary_intro" && (
         <div className="space-y-4">
@@ -253,6 +333,26 @@ export function AnniversarySectionControls({
               className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
             />
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Personal Romantic Message (Optional)
+            </label>
+            <textarea
+              rows={2}
+              value={config.personalMessage || ""}
+              onChange={(e) => update({ personalMessage: e.target.value })}
+              placeholder="A sweet personal message for your partner..."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <MediaUploader
+            label="Hero Couple Photograph"
+            currentUrl={config.couplePhotoUrl}
+            projectSlug={project.slug}
+            onUploadSuccess={(url) => update({ couplePhotoUrl: url })}
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -1382,6 +1482,19 @@ export function AnniversarySectionControls({
               Format: Month DD, YYYY (e.g. October 14, 2021). Seconds and total days are calculated live.
             </span>
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Next Anniversary Date (For Countdown)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. October 14, 2025"
+              value={config.nextAnniversaryDate || ""}
+              onChange={(e) => update({ nextAnniversaryDate: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
         </div>
       )}
 
@@ -1756,6 +1869,549 @@ export function AnniversarySectionControls({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      {/* SECTION: MEMORY MATCH MINI-GAME */}
+      {type === "anniversary_memory_match" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Subtext</label>
+            <textarea
+              rows={2}
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">Win Title</label>
+              <input
+                type="text"
+                value={config.winTitle || ""}
+                onChange={(e) => update({ winTitle: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">Win Message</label>
+              <input
+                type="text"
+                value={config.winMessage || ""}
+                onChange={(e) => update({ winMessage: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-semibold text-rose-900">
+                Memory Cards (Pairs automatically created)
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentCards = config.cards || [];
+                  const newCard: AnniversaryMemoryMatchCard = {
+                    id: `c-${Date.now()}`,
+                    label: "New Memory",
+                    iconOrImageUrl: "🌸",
+                    type: "icon",
+                  };
+                  update({ cards: [...currentCards, newCard] });
+                }}
+                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+              >
+                <Plus size={14} /> Add Card
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {(config.cards || []).map((card: AnniversaryMemoryMatchCard, idx: number) => (
+                <div
+                  key={card.id || idx}
+                  className="p-3 rounded-xl bg-pink-50/50 border border-pink-200 flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    maxLength={2}
+                    value={card.iconOrImageUrl}
+                    onChange={(e) => {
+                      const next = [...config.cards];
+                      next[idx].iconOrImageUrl = e.target.value;
+                      update({ cards: next });
+                    }}
+                    className="w-10 px-1 py-1.5 text-center text-sm rounded-lg bg-white border border-pink-200"
+                    title="Emoji Icon"
+                  />
+                  <input
+                    type="text"
+                    value={card.label}
+                    onChange={(e) => {
+                      const next = [...config.cards];
+                      next[idx].label = e.target.value;
+                      update({ cards: next });
+                    }}
+                    placeholder="Memory Name"
+                    className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-pink-200 text-rose-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = config.cards.filter((_: any, i: number) => i !== idx);
+                      update({ cards: next });
+                    }}
+                    className="p-1.5 text-stone-400 hover:text-rose-500 rounded-lg hover:bg-white"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: SCRATCH TO REVEAL */}
+      {type === "anniversary_scratch" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Subtext</label>
+            <textarea
+              rows={2}
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">Foil Cover Title</label>
+              <input
+                type="text"
+                value={config.coverTitle || ""}
+                onChange={(e) => update({ coverTitle: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">Foil Subtitle</label>
+              <input
+                type="text"
+                value={config.coverSubtitle || ""}
+                onChange={(e) => update({ coverSubtitle: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Secret Surprise Message (Revealed by scratching)
+            </label>
+            <textarea
+              rows={3}
+              value={config.secretMessage || ""}
+              onChange={(e) => update({ secretMessage: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Special Couple Photograph (Revealed under scratch foil)
+            </label>
+            <MediaUploader
+              label="Upload Favourite Memory Photo"
+              currentUrl={config.photoUrl || config.secretPhotoUrl}
+              projectSlug={project.slug}
+              accept="image/*"
+              onUploadSuccess={(url: string) => update({ photoUrl: url, secretPhotoUrl: url })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Photo Caption / Memory Note
+            </label>
+            <input
+              type="text"
+              value={config.photoCaption || ""}
+              onChange={(e) => update({ photoCaption: e.target.value })}
+              placeholder="The day that became my favorite chapter in our story."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: VOWS & PROMISES */}
+      {type === "anniversary_promises" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Subtext</label>
+            <textarea
+              rows={2}
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-semibold text-rose-900">Promise Cards</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentPromises = config.promises || [];
+                  const newPromise: AnniversaryPromiseCardItem = {
+                    id: `p-${Date.now()}`,
+                    title: "A New Promise",
+                    promise: "I promise to always be by your side through every season of life.",
+                    icon: "💍",
+                  };
+                  update({ promises: [...currentPromises, newPromise] });
+                }}
+                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+              >
+                <Plus size={14} /> Add Promise
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {(config.promises || []).map((item: AnniversaryPromiseCardItem, idx: number) => (
+                <div
+                  key={item.id || idx}
+                  className="p-3 rounded-xl bg-pink-50/50 border border-pink-200 space-y-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      maxLength={2}
+                      value={item.icon || "💍"}
+                      onChange={(e) => {
+                        const next = [...config.promises];
+                        next[idx].icon = e.target.value;
+                        update({ promises: next });
+                      }}
+                      className="w-10 px-1 py-1.5 text-center text-sm rounded-lg bg-white border border-pink-200"
+                    />
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) => {
+                        const next = [...config.promises];
+                        next[idx].title = e.target.value;
+                        update({ promises: next });
+                      }}
+                      placeholder="Promise Title"
+                      className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-pink-200 text-rose-950 font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = config.promises.filter((_: any, i: number) => i !== idx);
+                        update({ promises: next });
+                      }}
+                      className="p-1.5 text-stone-400 hover:text-rose-500 rounded-lg hover:bg-white"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={item.promise}
+                    onChange={(e) => {
+                      const next = [...config.promises];
+                      next[idx].promise = e.target.value;
+                      update({ promises: next });
+                    }}
+                    placeholder="Full vow text..."
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white border border-pink-200 text-stone-800"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: WHATSAPP CHAT INSIGHTS */}
+      {type === "anniversary_whatsapp" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Subtext</label>
+            <textarea
+              rows={2}
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          {/* In-Browser WhatsApp Chat Export Parser */}
+          <div className="p-4 rounded-2xl bg-white border border-pink-200 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-rose-950">
+              <MessageSquare size={14} className="text-rose-500" />
+              <span>Import WhatsApp Chat Export (.txt)</span>
+            </div>
+            <p className="text-[11px] text-stone-600 leading-relaxed">
+              Export your chat without media from WhatsApp on your phone, then select the <code className="bg-pink-50 px-1 py-0.5 rounded text-rose-800">.txt</code> file below. It is analyzed 100% in your browser. Zero messages or private text are sent to our server.
+            </p>
+
+            <input
+              type="file"
+              accept=".txt"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  const text = event.target?.result as string;
+                  if (text) {
+                    const parsedMetrics = parseWhatsAppChatExport(
+                      text,
+                      project.partner1Name || project.recipientName,
+                      project.partner2Name || project.senderName
+                    );
+                    update({ metrics: parsedMetrics });
+                  }
+                };
+                reader.readAsText(file);
+              }}
+              className="w-full text-xs text-rose-950 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-500 file:text-white hover:file:bg-rose-600 cursor-pointer"
+            />
+
+            {/* Current Metrics Overview */}
+            {config.metrics && (
+              <div className="mt-3 p-3 rounded-xl bg-pink-50 border border-pink-200 text-xs space-y-1">
+                <span className="font-semibold text-rose-900 block">Calculated Insights:</span>
+                <p>• Total Messages: <strong>{config.metrics.totalMessages.toLocaleString()}</strong></p>
+                <p>• {config.metrics.partner1Name}: <strong>{config.metrics.partner1Messages.toLocaleString()}</strong></p>
+                <p>• {config.metrics.partner2Name}: <strong>{config.metrics.partner2Messages.toLocaleString()}</strong></p>
+                <p>• Love Emojis Sent: <strong>{config.metrics.loveEmojisCount.toLocaleString()}</strong></p>
+                <p>• Peak Chat Day: <strong>{config.metrics.mostActiveDay}</strong></p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: ANNIVERSARY GIFT SPIN WHEEL */}
+      {type === "anniversary_spin_wheel" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              placeholder="The Anniversary Prize Wheel"
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Subtext</label>
+            <textarea
+              rows={2}
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              placeholder="Whatever it lands on, I owe you! Give it a spin to claim your romantic treat."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-rose-900">
+                Wheel Prize Options ({((config.options as AnniversaryWheelOption[]) || []).length})
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentOpts = (config.options as AnniversaryWheelOption[]) || [];
+                  const newOption: AnniversaryWheelOption = {
+                    id: `opt-${Date.now()}`,
+                    label: "New Romantic Gift",
+                    description: "Valid anytime for a special romantic treat.",
+                    color: "#C46879",
+                  };
+                  update({ options: [...currentOpts, newOption] });
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+              >
+                <Plus size={12} />
+                <span>Add Prize</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {((config.options as AnniversaryWheelOption[]) || []).map((opt, oIdx) => (
+                <div
+                  key={opt.id || oIdx}
+                  className="p-3 rounded-2xl bg-pink-50/40 border border-pink-200 space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <input
+                      type="text"
+                      value={opt.label}
+                      onChange={(e) => {
+                        const next = [...(config.options as AnniversaryWheelOption[])];
+                        next[oIdx] = { ...next[oIdx], label: e.target.value };
+                        update({ options: next });
+                      }}
+                      placeholder="Prize Label (e.g. Candlelight Dinner)"
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-white border border-pink-200 font-semibold text-rose-950"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = (config.options as AnniversaryWheelOption[]).filter((_, i) => i !== oIdx);
+                        update({ options: next });
+                      }}
+                      className="p-1 text-rose-400 hover:text-rose-600 transition-colors"
+                      aria-label="Delete prize"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <textarea
+                    rows={2}
+                    value={opt.description || ""}
+                    onChange={(e) => {
+                      const next = [...(config.options as AnniversaryWheelOption[])];
+                      next[oIdx] = { ...next[oIdx], description: e.target.value };
+                      update({ options: next });
+                    }}
+                    placeholder="Prize description and redemption details..."
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-pink-200 text-rose-900"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Footer Note</label>
+            <input
+              type="text"
+              value={config.footerNote || ""}
+              onChange={(e) => update({ footerNote: e.target.value })}
+              placeholder="Redeemable with unlimited hugs and smiles whenever you wish."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: THE MOON ON THE DAY WE MET */}
+      {type === "anniversary_moon" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              placeholder="The Moon on the Day We Met"
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Subtext</label>
+            <textarea
+              rows={2}
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              placeholder="The exact astronomical phase of the moon shining above the night our story began."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">
+                Meeting Date (Astronomical Calculation)
+              </label>
+              <input
+                type="text"
+                value={config.meetingDate || ""}
+                onChange={(e) => update({ meetingDate: e.target.value })}
+                placeholder="October 14, 2021"
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-rose-900 mb-1">Meeting Location</label>
+              <input
+                type="text"
+                value={config.location || ""}
+                onChange={(e) => update({ location: e.target.value })}
+                placeholder="Corner Coffee Roasters in the rain"
+                className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">
+              Personal Romantic Message
+            </label>
+            <textarea
+              rows={3}
+              value={config.personalMessage || ""}
+              onChange={(e) => update({ personalMessage: e.target.value })}
+              placeholder="Under this exact sky, the universe aligned and brought you into my life..."
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs text-rose-950"
+            />
           </div>
         </div>
       )}

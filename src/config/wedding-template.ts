@@ -11,6 +11,7 @@ export const CANONICAL_WEDDING_COLLECTIONS = [
   "floral-garden",
   "luxury-destination",
   "elegant-contemporary",
+  "luxury-wedding",
 ] as const;
 
 export type CanonicalWeddingCollection = (typeof CANONICAL_WEDDING_COLLECTIONS)[number];
@@ -157,6 +158,17 @@ export function normalizeWeddingCollection(collectionSlug?: string | null): Cano
     return "elegant-contemporary";
   }
 
+  // 12. Luxury Wedding (Haute Couture) aliases
+  if (
+    c === "luxury" ||
+    c === "luxury-wedding" ||
+    c.includes("couture") ||
+    c.includes("folio") ||
+    c.includes("haute")
+  ) {
+    return "luxury-wedding";
+  }
+
   // Unknown collection
   return null;
 }
@@ -204,6 +216,18 @@ export function createDefaultWeddingProject(
       googleMapsUrl: "https://maps.google.com/?q=Fairmont+Jaipur",
       dressCode: "Sunshine Yellow & Floral Pastels",
       description: "A joyful morning filled with auspicious turmeric, fragrant flower petals, dhol beats, and refreshing thandai.",
+      icon: "sparkles",
+    },
+    {
+      id: "evt-mehendi",
+      title: "Royal Mehendi & Henna Soiree",
+      date: "Sunday, December 14, 2026",
+      time: "03:00 PM onwards",
+      venueName: "The Heritage Verandah, Fairmont Jaipur",
+      address: "Riico Industrial Area, Kukas, Jaipur, Rajasthan 302028",
+      googleMapsUrl: "https://maps.google.com/?q=Fairmont+Jaipur",
+      dressCode: "Emerald Green & Traditional Festive",
+      description: "Intricate Rajasthani bridal henna artistry, festive folk melodies, bangle favors, and afternoon royal high tea.",
       icon: "sparkles",
     },
     {
@@ -331,7 +355,7 @@ export function createDefaultWeddingProject(
     groomBio = "A passionate pilot and foodie whose booming laughter and generosity light up every single room.";
     brideTitle = "Daughter of Smt. Manjit & Sardar Balwinder Singh Sandhu";
     brideBio = "An interior designer with an infectious smile, sparkling eyes, and the warmest hospitable heart.";
-    parentsBlessing = "“May Waheguru bless our children with lifelong laughter, robust health, and endless warmth.”";
+    parentsBlessing = "“May our children be blessed with lifelong laughter, robust health, immense joy, and unwavering warmth in every step of their journey together.”";
     events = [
       {
         id: "evt-roka",
@@ -371,15 +395,27 @@ export function createDefaultWeddingProject(
       },
       {
         id: "evt-baraat",
-        title: "Baraat, Anand Karaj & Reception",
+        title: "The Grand Shahi Viah & Baraat",
         date: "Sunday, December 21, 2026",
-        time: "11:30 AM (Baraat) • 01:00 PM (Langar & Feast)",
-        venueName: "The Heritage Gurdwara & Palace Banquets",
+        time: "11:30 AM (Baraat) • 01:00 PM (Wedding Ceremony & Feast)",
+        venueName: "The Heritage Haveli Resort, Amritsar",
         address: "GT Road, Amritsar, Punjab 143001",
         googleMapsUrl: "https://maps.google.com/?q=Amritsar+Punjab",
         dressCode: "Royal Turban / Sherwani & Designer Lehengas",
-        description: "The grand Baraat on vintage cars, solemn Anand Karaj ceremony, and an unforgettable evening dinner party.",
+        description: "The grand Baraat procession with live dholis, garland exchange, sacred wedding ceremony, and an authentic royal afternoon feast.",
         icon: "ring",
+      },
+      {
+        id: "evt-reception",
+        title: "Grand Reception & Shahi Dawat",
+        date: "Sunday, December 21, 2026",
+        time: "07:30 PM onwards",
+        venueName: "The Grand Ballroom, Hyatt Regency Amritsar",
+        address: "MBM Farms, GT Road, Amritsar, Punjab 143001",
+        googleMapsUrl: "https://maps.google.com/?q=Hyatt+Regency+Amritsar",
+        dressCode: "Evening Formal / Velvet & Brocade",
+        description: "A magnificent evening of celebratory toasts, cake cutting, live Punjabi folk music, and an exquisite royal feast.",
+        icon: "party",
       },
     ];
   } else if (collectionKey === "sikh") {
@@ -744,6 +780,18 @@ export function createDefaultWeddingProject(
         description: "Gourmet coastal seafood feast, signature cocktails, international fire acrobatics, and dancing under the stars.",
         icon: "party",
       },
+      {
+        id: "evt-brunch",
+        title: "Farewell Champagne & Sunshine Brunch",
+        date: "Sunday, November 08, 2026",
+        time: "10:30 AM onwards",
+        venueName: "The Riverside Terrace, The Leela Goa",
+        address: "Mobor Beach, Cavelossim, Goa 403731",
+        googleMapsUrl: "https://maps.google.com/?q=The+Leela+Goa",
+        dressCode: "Breezy Casual Resort Wear",
+        description: "A lazy morning by the river Sal featuring fresh pastries, mimosas, heartfelt hugs, and safe travel wishes.",
+        icon: "sun",
+      },
     ];
   } else if (collectionKey === "elegant-contemporary") {
     defaultBride = "Tara";
@@ -801,6 +849,75 @@ export function createDefaultWeddingProject(
         icon: "party",
       },
     ];
+  } else if (collectionKey === "luxury-wedding") {
+    defaultBride = "Seraphina";
+    defaultGroom = "Alexander";
+    defaultTheme = "champagne-gold";
+    revealStyle = "wax_seal";
+    culturalSymbol = "monogram";
+    eyebrow = "Together with their families";
+    headline = "A Celebration of Love & Destiny";
+    weddingDateText = "Saturday, September 19, 2026 • Lake Como, Italy";
+    actionButtonText = "Unfold Invitation Folio ✨";
+    audioNotice = "Turn on sound for classical piano & strings";
+    targetDate = "2026-09-19T16:30:00+02:00";
+    venueCity = "Villa Balbiano, Lake Como, Italy";
+    religiousBlessingText = "“Two souls with but a single thought, two hearts that beat as one.” — John Keats";
+    groomTitle = "Son of Lady Eleanor & Lord Arthur Sterling";
+    groomBio = "An architectural visionary whose devotion, warmth, and steady grace found their ultimate muse in Seraphina.";
+    brideTitle = "Daughter of Dr. Victoria & Ambassador Charles Montgomery";
+    brideBio = "A classical pianist and curator whose radiant elegance, boundless empathy, and joyful laughter illuminate every room.";
+    parentsBlessing = "“May your union be blessed with deep affection, timeless grace, unwavering courage, and boundless laughter through every season of life.”";
+    events = [
+      {
+        id: "evt-welcome-soiree",
+        title: "Sunset Welcome Soirée & Bellini Toast",
+        date: "Friday, September 18, 2026",
+        time: "06:00 PM onwards",
+        venueName: "The Terrace Gardens, Villa Balbiano",
+        address: "Piazza Carducci, Ossuccio, Lake Como, Italy",
+        googleMapsUrl: "https://maps.google.com/?q=Villa+Balbiano+Lake+Como",
+        dressCode: "Cocktail Chic (Linen & Summer Pastels)",
+        description: "Crisp prosecco, acoustic strings by the water, artisan antipasti, and welcoming toasts under the Alpine twilight.",
+        icon: "sparkles",
+      },
+      {
+        id: "evt-vows",
+        title: "The Sacred Vows & Exchange of Rings",
+        date: "Saturday, September 19, 2026",
+        time: "04:30 PM (At Golden Hour)",
+        venueName: "The Lakeside Cypress Lawn, Villa Balbiano",
+        address: "Piazza Carducci, Ossuccio, Lake Como, Italy",
+        googleMapsUrl: "https://maps.google.com/?q=Villa+Balbiano+Lake+Como",
+        dressCode: "Black-Tie (Tuxedos & Evening Gowns)",
+        description: "Processional harp accompaniment, solemn exchange of vows, and golden rose petals by the calm waters of Lake Como.",
+        icon: "ring",
+      },
+      {
+        id: "evt-gala-dinner",
+        title: "Grand Gala Dinner & Midnight Dance",
+        date: "Saturday, September 19, 2026",
+        time: "07:30 PM onwards",
+        venueName: "The Grand Marquee & Salone, Villa Balbiano",
+        address: "Piazza Carducci, Ossuccio, Lake Como, Italy",
+        googleMapsUrl: "https://maps.google.com/?q=Villa+Balbiano+Lake+Como",
+        dressCode: "Black-Tie Formal",
+        description: "Four-course Michelin-inspired Italian banquet, vintage champagne toasts, cutting of the millefoglie, and dancing under the stars.",
+        icon: "party",
+      },
+      {
+        id: "evt-brunch",
+        title: "Farewell Champagne Brunch",
+        date: "Sunday, September 20, 2026",
+        time: "11:00 AM onwards",
+        venueName: "The Lakefront Pergola, Grand Hotel Tremezzo",
+        address: "Via Regina 8, Tremezzo, Lake Como, Italy",
+        googleMapsUrl: "https://maps.google.com/?q=Grand+Hotel+Tremezzo",
+        dressCode: "Resort Casual / Riviera Whites",
+        description: "Freshly brewed espresso, artisan pastries, bellinis, and warm farewell embraces before departure.",
+        icon: "sparkles",
+      },
+    ];
   }
 
   // Use customer passed names if present, otherwise authentic defaults
@@ -844,11 +961,11 @@ export function createDefaultWeddingProject(
         groomName: finalGroom,
         groomTitle,
         groomBio,
-        groomPhotoUrl: "/images/templates/wedding-groom.jpg",
+        groomPhotoUrl: "/images/royal/groom_portrait.jpg",
         brideName: finalBride,
         brideTitle,
         brideBio,
-        bridePhotoUrl: "/images/templates/wedding-bride.jpg",
+        bridePhotoUrl: "/images/royal/bride_portrait.jpg",
         parentsBlessing,
       },
     },
@@ -876,6 +993,53 @@ export function createDefaultWeddingProject(
         headline: "Celebration Itinerary & Agenda 🎊",
         subtext: "We eagerly anticipate your gracious presence at each of our sacred ceremonies and celebratory gatherings.",
         events,
+        ...(collectionKey === "punjabi"
+          ? {
+              ceremonyType: "sikh",
+              ceremonyVenueName: "The Heritage Haveli Gurdwara, Amritsar",
+              ceremonyAddress: "GT Road, Amritsar, Punjab 143001",
+              ceremonyTime: "10:30 AM (Baraat & Swagat) • 11:30 AM (Anand Karaj)",
+              ceremonyDate: "Sunday, December 21, 2026",
+              ceremonyMapsUrl: "https://maps.google.com/?q=Amritsar+Punjab",
+              ceremonyReligiousQuote: "ਧਨੁ ਪਿਰੁ ਏਹਿ ਨ ਆਖੀਅਨਿ ਬਹਨਿ ਇਕਠੇ ਹੋਇ ॥ ਏਕ ਜੋਤਿ ਦੁਇ ਮੂਰਤੀ ਧਨੁ ਪਿਰੁ ਕਹੀਐ ਸੋਇ ॥",
+              ceremonyDescription: "The sacred Four Laavan uniting two souls into one light in the divine presence of Sri Guru Granth Sahib Ji.",
+              showLaavanExplanation: true,
+              jaggoConfig: {
+                enabled: true,
+                title: "Raat Jaggo Di • Courtyard Celebration",
+                description: "Carry the glowing brass Jaggo on your head, sing boliya, and ignite the night with vibrant dhol beats!",
+              },
+              baraatConfig: {
+                enabled: true,
+                title: "Shahi Baraat & Swagat",
+                time: "10:30 AM onwards",
+                description: "The royal procession on the adorned steed with live dholis, bhangra dance, and warm Milni garland ceremony.",
+              },
+            }
+          : collectionKey === "sikh"
+          ? {
+              ceremonyType: "sikh",
+              ceremonyVenueName: "Gurdwara Sri Guru Singh Sabha",
+              ceremonyAddress: "Defence Colony, New Delhi 110024",
+              ceremonyTime: "09:30 AM (Asa Di Var) • 10:30 AM (Anand Karaj)",
+              ceremonyDate: "Sunday, October 25, 2026",
+              ceremonyMapsUrl: "https://maps.google.com/?q=Gurdwara+Defence+Colony+Delhi",
+              ceremonyReligiousQuote: "ਧਨੁ ਪਿਰੁ ਏਹਿ ਨ ਆਖੀਅਨਿ ਬਹਨਿ ਇਕਠੇ ਹੋਇ ॥ ਏਕ ਜੋਤਿ ਦੁਇ ਮੂਰਤੀ ਧਨੁ ਪਿਰੁ ਕਹੀਐ ਸੋਇ ॥",
+              ceremonyDescription: "The sacred Anand Karaj ceremony with Four Laavan uniting two souls in eternal spiritual devotion.",
+              showLaavanExplanation: true,
+              jaggoConfig: {
+                enabled: true,
+                title: "Sangeet & Jaggo Night",
+                description: "Joyful Punjabi folk singing, giddha boliya, and traditional glowing brass pots.",
+              },
+              baraatConfig: {
+                enabled: true,
+                title: "Baraat Arrival & Milni",
+                time: "09:30 AM onwards",
+                description: "Assembly of the groom's procession followed by the dignified Milni garland exchange between elders.",
+              },
+            }
+          : {}),
       },
     },
     {
@@ -1031,9 +1195,11 @@ export function createDefaultWeddingProject(
   };
 }
 
-export default {
+const weddingTemplate = {
   normalizeWeddingCollection,
   createDefaultWeddingProject,
   CANONICAL_WEDDING_COLLECTIONS,
   VALID_WEDDING_COLLECTIONS,
 };
+
+export default weddingTemplate;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -42,12 +42,8 @@ export default function AdminOrderDetailPage({
   let idFromProps = "";
   if (params) {
     if (typeof (params as any).then === "function") {
-      try {
-        const resolved = use(params as Promise<{ id: string }>);
-        if (resolved && resolved.id) idFromProps = resolved.id;
-      } catch {
-        // Fallback to useParams
-      }
+      const resolved = use(params as Promise<{ id: string }>);
+      if (resolved && resolved.id) idFromProps = resolved.id;
     } else if (typeof params === "object" && (params as any).id) {
       idFromProps = (params as any).id;
     }
@@ -74,7 +70,7 @@ export default function AdminOrderDetailPage({
   const [refundNote, setRefundNote] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("placed");
 
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     if (!orderId) {
       setLoading(false);
       setError("No order ID provided in URL");
@@ -105,13 +101,15 @@ export default function AdminOrderDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, router]);
 
   useEffect(() => {
     if (orderId) {
-      fetchOrder();
+      Promise.resolve().then(() => {
+        fetchOrder();
+      });
     }
-  }, [orderId]);
+  }, [orderId, fetchOrder]);
 
   const handleVerifyUpi = async () => {
     if (!confirm("Are you sure you have verified the funds in your business account? This will mark the order as PAID and provision/link the website project.")) {

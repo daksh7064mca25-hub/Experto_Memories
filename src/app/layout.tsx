@@ -23,6 +23,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://expertomemories.shop"),
   title: "ExpertoMemories — Digital Gifting Studio",
   description: "Create and publish bespoke, emotionally engaging interactive gift websites for apologies, anniversaries, birthdays, and love stories.",
   icons: {

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { projectService } from "@/services/project.service";
 import { CreateProjectSchema } from "@/lib/validations/project.schema";
 import { getAdminSession, getCustomerSession } from "@/lib/auth";
+import { connectToDatabase } from "@/lib/mongodb";
+import { CatalogueProduct } from "@/models/CatalogueProduct";
 
 export async function GET(req: Request) {
   try {
@@ -52,6 +54,22 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const validated = CreateProjectSchema.parse(body);
+
+    await connectToDatabase();
+    // Enforce server-side product visibility: reject new creation if occasion is hidden
+    const productRecord = await CatalogueProduct.findOne({
+      $or: [
+        { occasionType: validated.occasionType },
+        { slug: validated.occasionType },
+      ],
+    }).lean();
+
+    if (productRecord && productRecord.isActive === false) {
+      return NextResponse.json(
+        { error: "This experience is currently unavailable for new creations." },
+        { status: 400 }
+      );
+    }
 
     const projectPayload: any = {
       ...validated,

@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, Heart, Sparkles } from "lucide-react";
 
+const emptySubscribe = () => () => {};
+
 export function KeepsakeAtelierSection() {
   const [activePanel, setActivePanel] = useState<number | null>(null);
-  const [isTouch, setIsTouch] = useState(false);
-
-  useEffect(() => {
-    setIsTouch(
-      typeof window !== "undefined" &&
-        ("ontouchstart" in window || navigator.maxTouchPoints > 0)
-    );
-  }, []);
+  const isTouch = useSyncExternalStore(
+    emptySubscribe,
+    () => typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0),
+    () => false
+  );
 
   const togglePanel = (index: number) => {
     setActivePanel((prev) => (prev === index ? null : index));
@@ -197,11 +196,24 @@ export function KeepsakeAtelierSection() {
           <div className="p-6 sm:p-7 pt-0 relative z-10 space-y-3">
             <div>
               <h3 className="font-serif text-2xl font-bold text-[#211715] group-hover:text-[#541D2B] transition-colors leading-snug">
-                Personalized Digital Gifts
+                Love &amp; Relationship Gifts
               </h3>
               <p className="text-xs text-[#78716C] leading-relaxed mt-1">
-                Wax-sealed letters, photo scrapbooks, constellation maps &amp; private romantic keepsakes.
+                Wax-sealed love letters, interactive digital storybooks, polaroid scrapbooks &amp; romantic surprises.
               </p>
+            </div>
+
+            {/* Subcategories */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-[#541D2B]/5 text-[#541D2B] border border-[#541D2B]/15">
+                Love &amp; Romance
+              </span>
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-[#541D2B]/5 text-[#541D2B] border border-[#541D2B]/15">
+                Anniversary
+              </span>
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-[#541D2B]/5 text-[#541D2B] border border-[#541D2B]/15">
+                Apology
+              </span>
             </div>
 
             <div className="pt-3 border-t border-[#EAE3D9] flex items-center justify-between">
@@ -210,14 +222,14 @@ export function KeepsakeAtelierSection() {
                 className="inline-flex items-center gap-1.5 text-xs font-serif font-bold text-[#541D2B] group-hover:text-[#3B111D] transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span>Explore Digital Gifts</span>
+                <span>Explore Relationship Gifts</span>
                 <ArrowRight
                   size={13}
                   className="transition-transform group-hover:translate-x-1"
                 />
               </Link>
               <span className="text-[10px] font-mono text-[#A8A29E]">
-                4 Experiences
+                3 Categories
               </span>
             </div>
           </div>
@@ -401,11 +413,24 @@ export function KeepsakeAtelierSection() {
           <div className="p-6 sm:p-7 pt-0 relative z-10 space-y-3">
             <div>
               <h3 className="font-serif text-2xl font-bold text-[#211715] group-hover:text-[#8E641D] transition-colors leading-snug">
-                Digital Wedding Invitations
+                Wedding Invitations
               </h3>
               <p className="text-xs text-[#78716C] leading-relaxed mt-1">
-                10 bespoke cultural collections with animated ceremonial reveals, agendas &amp; RSVP tracking.
+                Bespoke digital wedding experiences with animated ceremonial reveals, multi-event agendas &amp; RSVP tracking.
               </p>
+            </div>
+
+            {/* Subcategories / features */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-[#D4AF37]/10 text-[#8E641D] border border-[#D4AF37]/25">
+                7 Bespoke Collections
+              </span>
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-[#D4AF37]/10 text-[#8E641D] border border-[#D4AF37]/25">
+                Multi-Event Itineraries
+              </span>
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-[#D4AF37]/10 text-[#8E641D] border border-[#D4AF37]/25">
+                Real-Time RSVP
+              </span>
             </div>
 
             <div className="pt-3 border-t border-[#EAE3D9] flex items-center justify-between">
@@ -414,14 +439,14 @@ export function KeepsakeAtelierSection() {
                 className="inline-flex items-center gap-1.5 text-xs font-serif font-bold text-[#8E641D] group-hover:text-[#5A3F10] transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span>Explore Wedding Atelier</span>
+                <span>Explore Wedding Invitations</span>
                 <ArrowRight
                   size={13}
                   className="transition-transform group-hover:translate-x-1"
                 />
               </Link>
               <span className="text-[10px] font-mono text-[#A8A29E]">
-                10 Collections
+                7 Collections
               </span>
             </div>
           </div>
@@ -579,11 +604,24 @@ export function KeepsakeAtelierSection() {
           <div className="p-6 sm:p-7 pt-0 relative z-10 space-y-3">
             <div>
               <h3 className="font-serif text-2xl font-bold text-[#211715] group-hover:text-[#D97706] transition-colors leading-snug">
-                Birthday Wonderlands
+                Birthday Gifts
               </h3>
               <p className="text-xs text-[#78716C] leading-relaxed mt-1">
-                Interactive 3D cakes, candle blowing, floating balloons &amp; celebratory memory scrapbooks.
+                Immersive birthday gift experiences with interactive 3D cake, candle blowout &amp; memory scrapbooks.
               </p>
+            </div>
+
+            {/* Subcategories / features */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 border border-amber-500/20">
+                Interactive 3D Cake
+              </span>
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 border border-amber-500/20">
+                Milestone Memory Wall
+              </span>
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 border border-amber-500/20">
+                Surprise Games
+              </span>
             </div>
 
             <div className="pt-3 border-t border-[#EAE3D9] flex items-center justify-between">
@@ -592,14 +630,14 @@ export function KeepsakeAtelierSection() {
                 className="inline-flex items-center gap-1.5 text-xs font-serif font-bold text-[#D97706] group-hover:text-[#B45309] transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span>Explore Birthday Wonderlands</span>
+                <span>Explore Birthday Gifts</span>
                 <ArrowRight
                   size={13}
                   className="transition-transform group-hover:translate-x-1"
                 />
               </Link>
               <span className="text-[10px] font-mono text-[#A8A29E]">
-                8 Subcollections
+                Birthday Experiences
               </span>
             </div>
           </div>

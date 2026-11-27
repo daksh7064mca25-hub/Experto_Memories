@@ -1,4 +1,9 @@
 import { WebsiteProjectData, WebsiteSectionData, BirthdayThemeId } from "@/types/website";
+import {
+  getBirthdaySurprisePresets,
+  getDefaultCustomReward,
+  getDefaultRandomRewards,
+} from "@/config/birthday-surprises";
 
 export type BirthdayRelationship =
   | "general"
@@ -7,6 +12,9 @@ export type BirthdayRelationship =
   | "sister"
   | "brother"
   | "best-friend"
+  | "other-friends"
+  | "girlfriend-boyfriend"
+  | "husband-wife"
   | "wife"
   | "husband"
   | "kids";
@@ -376,15 +384,20 @@ export function createRelationshipBirthdayProject(
     {
       id: "sec-bday-game",
       type: "birthday_game",
-      title: "6. Birthday Surprise Game",
+      title: "6. Birthday Surprise Scratch Card",
       enabled: true,
       order: 5,
       config: {
-        headline: "Scratch To Reveal Your Prize 🎁",
-        subtext: "Rub or drag your finger across the golden foil to unlock your personalized birthday surprise!",
+        headline: "Your Birthday Surprise! 🎁",
+        subtext: "Rub or drag your finger across the golden foil to reveal your gift!",
+        mode: "custom",
+        customReward: getDefaultCustomReward(rel),
+        randomRewards: getDefaultRandomRewards(rel),
+        gameType: "scratch",
+        relationship: rel,
         scratchMessage,
         secretGiftText: scratchGift,
-        gameType: "scratch",
+        surprises: getBirthdaySurprisePresets(rel),
       },
     },
     {

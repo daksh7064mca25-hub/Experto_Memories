@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Heart,
@@ -19,7 +20,11 @@ import {
 function CustomerAuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect") || "/dashboard";
+  const rawRedirect = searchParams.get("redirect") || "/dashboard";
+  const redirectUrl =
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/dashboard";
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
@@ -66,9 +71,16 @@ function CustomerAuthContent() {
     <div className="min-h-screen bg-gradient-to-b from-rose-50/60 via-white to-pink-50/40 text-stone-900 flex flex-col font-sans">
       {/* Top Header */}
       <header className="px-6 h-16 flex items-center justify-between border-b border-stone-100 bg-white/80 backdrop-blur-md sticky top-0 z-20">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-sm">
-            <Heart size={16} className="fill-current" />
+        <Link href="/" className="flex items-center gap-2.5 group" aria-label="ExpertoMemories Home">
+          <div className="relative h-8 w-auto shrink-0 flex items-center">
+            <Image
+              src="/branding/expertomemories-monogram.png"
+              alt="ExpertoMemories EM Monogram"
+              width={505}
+              height={321}
+              priority
+              className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
           </div>
           <span className="font-serif font-bold text-lg text-stone-900">ExpertoMemories</span>
         </Link>

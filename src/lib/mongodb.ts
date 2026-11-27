@@ -1,15 +1,20 @@
 import mongoose from "mongoose";
 import dns from "dns";
 
-// Ensure Node can resolve MongoDB SRV records when the local DNS resolver (e.g. 127.0.0.1) does not support SRV lookups
-try {
-  const currentServers = dns.getServers();
-  if (currentServers.length === 1 && currentServers[0] === "127.0.0.1") {
-    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+// Ensure Node can resolve MongoDB SRV records when the local DNS resolver (e.g. 127.0.0.1 or Windows loopback) does not support SRV lookups
+function ensurePublicDns(): void {
+  try {
+    const currentServers = dns.getServers();
+    const hasLoopback = currentServers.some((s) => s.startsWith("127.") || s === "::1");
+    if (hasLoopback || currentServers.length === 0) {
+      dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
+    }
+  } catch {
+    // Ignore DNS config errors in edge/browser environments
   }
-} catch {
-  // Ignore DNS config errors in edge/browser environments
 }
+
+ensurePublicDns();
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -17,7 +22,6 @@ interface MongooseCache {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var mongooseCache: MongooseCache | undefined;
 }
 
@@ -50,11 +54,7 @@ export async function connectToDatabase(): Promise<typeof mongoose | null> {
   }
 
   if (!cached.promise) {
-    try {
-      dns.setServers(["8.8.8.8", "1.1.1.1"]);
-    } catch {
-      // Ignore in non-Node environments
-    }
+    ensurePublicDns();
 
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
@@ -64,7 +64,24 @@ export async function connectToDatabase(): Promise<typeof mongoose | null> {
       minPoolSize: 1,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => m);
+    cached.promise = (async () => {
+      try {
+        return await mongoose.connect(MONGODB_URI, opts);
+      } catch (firstErr: any) {
+        const msg = firstErr?.message || String(firstErr);
+        // If DNS SRV query refused or failed on local Windows resolver, force public DNS and retry once
+        if (msg.includes("querySrv") || msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND")) {
+          try {
+            dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
+            await new Promise((r) => setTimeout(r, 200));
+            return await mongoose.connect(MONGODB_URI, opts);
+          } catch (retryErr: any) {
+            throw retryErr;
+          }
+        }
+        throw firstErr;
+      }
+    })();
   }
 
   try {

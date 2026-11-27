@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Heart,
@@ -38,6 +39,7 @@ export default function CheckoutPage() {
 
   // Payment Selection
   const [paymentMethod, setPaymentMethod] = useState<"manual_upi" | "razorpay">("manual_upi");
+  const [paymentMethodsAllowed, setPaymentMethodsAllowed] = useState<"both" | "razorpay_only" | "upi_only">("both");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingMessage, setSubmittingMessage] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -89,6 +91,19 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     loadRazorpayScript();
+    fetch("/api/settings/pricing")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.pricing?.paymentMethodsAllowed) {
+          setPaymentMethodsAllowed(d.pricing.paymentMethodsAllowed);
+          if (d.pricing.paymentMethodsAllowed === "razorpay_only") {
+            setPaymentMethod("razorpay");
+          } else if (d.pricing.paymentMethodsAllowed === "upi_only") {
+            setPaymentMethod("manual_upi");
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleCreateOrder = async (e: React.FormEvent) => {
@@ -281,6 +296,7 @@ export default function CheckoutPage() {
 
   const handleSubmitUtr = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingUtr) return; // Prevent double submit
     if (!utrNumber.trim() || utrNumber.trim().length < 6) {
       setErrorMsg("Please enter a valid 12-digit UPI reference / UTR number.");
       return;
@@ -318,15 +334,22 @@ export default function CheckoutPage() {
       {/* Top Header */}
       <header className="bg-white border-b border-stone-200/80 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center">
-              <Heart size={16} className="fill-current" />
+          <Link href="/" className="flex items-center gap-2.5 group" aria-label="ExpertoMemories Home">
+            <div className="relative h-8 w-auto shrink-0 flex items-center">
+              <Image
+                src="/branding/expertomemories-monogram.png"
+                alt="ExpertoMemories EM Monogram"
+                width={505}
+                height={321}
+                priority
+                className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              />
             </div>
             <span className="font-serif font-bold text-lg text-stone-900">ExpertoMemories</span>
           </Link>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-stone-500">
-            <ShieldCheck size={16} className="text-emerald-600" />
-            <span>256-Bit SSL Encrypted Checkout</span>
+          <div className="flex items-center gap-1.5 text-xs font-medium text-stone-500 shrink-0">
+            <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
+            <span><span className="hidden xs:inline">256-Bit SSL </span>Encrypted</span>
           </div>
         </div>
       </header>
@@ -553,65 +576,69 @@ export default function CheckoutPage() {
                 <div className="pt-6 border-t border-stone-100">
                   <h2 className="font-serif text-lg font-bold text-stone-900 mb-3">Payment Method</h2>
                   <div className="space-y-3">
-                    <label
-                      className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                        paymentMethod === "manual_upi"
-                          ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
-                          : "border-stone-200 hover:border-stone-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          checked={paymentMethod === "manual_upi"}
-                          onChange={() => setPaymentMethod("manual_upi")}
-                          className="accent-rose-600"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-serif font-bold text-sm text-stone-900">Direct UPI Transfer</span>
-                            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                              0% Gateway Fee
-                            </span>
+                    {paymentMethodsAllowed !== "razorpay_only" && (
+                      <label
+                        className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                          paymentMethod === "manual_upi"
+                            ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
+                            : "border-stone-200 hover:border-stone-300 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            checked={paymentMethod === "manual_upi"}
+                            onChange={() => setPaymentMethod("manual_upi")}
+                            className="accent-rose-600"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-serif font-bold text-sm text-stone-900">Direct UPI Transfer</span>
+                              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                                0% Gateway Fee
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 mt-0.5">
+                              GPay, PhonePe, Paytm QR code with instant UTR confirmation
+                            </p>
                           </div>
-                          <p className="text-[11px] text-stone-500 mt-0.5">
-                            GPay, PhonePe, Paytm QR code with instant UTR confirmation
-                          </p>
                         </div>
-                      </div>
-                      <QrCode size={20} className="text-stone-400" />
-                    </label>
+                        <QrCode size={20} className="text-stone-400" />
+                      </label>
+                    )}
 
-                    <label
-                      className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                        paymentMethod === "razorpay"
-                          ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
-                          : "border-stone-200 hover:border-stone-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          checked={paymentMethod === "razorpay"}
-                          onChange={() => setPaymentMethod("razorpay")}
-                          className="accent-rose-600"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-serif font-bold text-sm text-stone-900">Online Payment Gateway</span>
-                            <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">
-                              Automated
-                            </span>
+                    {paymentMethodsAllowed !== "upi_only" && (
+                      <label
+                        className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                          paymentMethod === "razorpay"
+                            ? "border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20"
+                            : "border-stone-200 hover:border-stone-300 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            checked={paymentMethod === "razorpay"}
+                            onChange={() => setPaymentMethod("razorpay")}
+                            className="accent-rose-600"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-serif font-bold text-sm text-stone-900">Online Payment Gateway</span>
+                              <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">
+                                Automated
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 mt-0.5">
+                              Credit/Debit Cards, Netbanking, Razorpay UPI
+                            </p>
                           </div>
-                          <p className="text-[11px] text-stone-500 mt-0.5">
-                            Credit/Debit Cards, Netbanking, Razorpay UPI
-                          </p>
                         </div>
-                      </div>
-                      <CreditCard size={20} className="text-stone-400" />
-                    </label>
+                        <CreditCard size={20} className="text-stone-400" />
+                      </label>
+                    )}
                   </div>
                 </div>
 

@@ -11,12 +11,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Live Interactive Romantic Love Demo | ExpertoMemories",
+  title: "Our Little Love Story — Interactive Digital Love Book | ExpertoMemories",
   description:
-    "Explore the interactive Love demo for ExpertoMemories. Features love milestones, secret couple trivia, reasons why I love you constellation, and love letters.",
+    "Open a realistic, interactive digital love book crafted exclusively for your partner. Features handwritten love letters, Polaroid scrapbook memories, love reasons, date coupons, and songs.",
   openGraph: {
-    title: "Letters Across Time — Interactive Love Demo | ExpertoMemories",
-    description: "An intimate digital time capsule of pure love and romance.",
+    title: "Our Little Love Story — Interactive Digital Love Book | ExpertoMemories",
+    description: "A realistic digital love book with turning pages, handwritten letters, and couple memories.",
     type: "website",
   },
 };
@@ -33,19 +33,19 @@ export default function LoveDemoPage() {
           <ArrowLeft size={13} />
           <span>Back to Gifts</span>
         </Link>
-        <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-mono font-semibold bg-rose-500 text-white shadow-md">
-          <Sparkles size={11} />
-          <span>Interactive Romance Sample</span>
+        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-serif font-semibold bg-rose-50/95 backdrop-blur-md text-rose-900 shadow-sm border border-rose-200">
+          <Sparkles size={11} className="text-amber-500" />
+          <span>Interactive Digital Love Book 📖</span>
         </span>
       </div>
 
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50 hidden sm:block">
         <Link
           href="/dashboard/create?occasion=love"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold bg-rose-500 hover:bg-rose-600 text-white shadow-xl shadow-rose-500/30 transition-all hover:scale-105"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 hover:scale-105 text-white shadow-xl shadow-rose-900/20 transition-all border border-amber-300/40"
         >
           <Heart size={14} className="fill-current" />
-          <span>Customize This Love Gift</span>
+          <span>Create Your Love Book</span>
         </Link>
       </div>
 

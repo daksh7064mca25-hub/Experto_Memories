@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
-import { CheckCircle2, XCircle, Trophy, RotateCcw, HelpCircle, Sparkles } from "lucide-react";
+import { CheckCircle2, XCircle, Trophy, RotateCcw, HelpCircle, Sparkles, Heart } from "lucide-react";
 import { AnniversaryQuizConfig, QuizQuestion, ThemeId } from "@/types/website";
 import { getThemeConfig } from "@/config/anniversary-themes";
 
@@ -44,7 +44,7 @@ export function AnniversaryQuizSection({ config, theme }: Props) {
         particleCount: 70,
         spread: 80,
         origin: { y: 0.65 },
-        colors: ["#f59e0b", "#ec4899", "#a855f7", "#10b981"],
+        colors: ["#C46879", "#E8B4B8", "#6B2D38", "#FAF6F0"],
       });
     }
   };
@@ -60,17 +60,18 @@ export function AnniversaryQuizSection({ config, theme }: Props) {
   if (!questions || questions.length === 0) return null;
 
   return (
-    <section id="anniv-sec-quiz" className="py-16 px-4 max-w-xl mx-auto">
-      <div className={`${themeConfig.cardBgClass} rounded-3xl p-6 sm:p-8 shadow-xl border relative overflow-hidden select-none`}>
+    <section id="anniv-sec-quiz" className="py-14 sm:py-20 px-4 max-w-xl mx-auto">
+      <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#E8B4B8]/80 shadow-[#6B2D38]/10 relative overflow-hidden select-none">
         {/* Header */}
         <div className="text-center mb-6">
-          <span className="inline-block px-3.5 py-1 rounded-full text-xs font-serif font-semibold bg-amber-100 dark:bg-purple-950 text-amber-800 dark:text-purple-300 mb-2 border border-amber-200/80 dark:border-purple-800">
-            Couple Milestones Trivia 💡
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-serif font-medium bg-[#FFF5F6] text-[#6B2D38] border border-[#E8B4B8]/70 shadow-sm mb-3">
+            <HelpCircle size={13} className="text-[#C46879]" />
+            <span>Relationship Trivia</span>
           </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-purple-100">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#3D262A]">
             {config.headline || "How Well Do You Know Us?"}
           </h2>
-          <p className="text-xs sm:text-sm opacity-80 mt-1 max-w-sm mx-auto font-sans leading-relaxed">
+          <p className="text-xs sm:text-sm font-serif italic text-[#6B2D38]/85 mt-1 max-w-sm mx-auto leading-relaxed">
             {config.subtext || "A playful little quiz about our funniest, sweetest relationship memories!"}
           </p>
         </div>
@@ -78,13 +79,15 @@ export function AnniversaryQuizSection({ config, theme }: Props) {
         {!isQuizComplete && currentQ ? (
           <div>
             {/* Question Progress Tracker */}
-            <div className="flex items-center justify-between text-xs font-serif text-stone-500 dark:text-purple-300 mb-3 border-b border-stone-200/50 pb-2">
-              <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
-              <span className="font-mono font-bold text-amber-600 dark:text-purple-400">Score: {score}</span>
+            <div className="flex items-center justify-between text-xs font-mono text-[#6B2D38]/80 mb-3 border-b border-[#E8B4B8]/40 pb-2">
+              <span>
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </span>
+              <span className="font-bold text-[#C46879]">Score: {score}</span>
             </div>
 
             {/* Question Heading */}
-            <h3 className="font-serif font-bold text-lg sm:text-xl text-stone-900 dark:text-purple-100 mb-5 leading-snug">
+            <h3 className="font-serif font-bold text-lg sm:text-xl text-[#3D262A] mb-5 leading-snug">
               {currentQ.question}
             </h3>
 
@@ -94,75 +97,83 @@ export function AnniversaryQuizSection({ config, theme }: Props) {
                 const isSelected = selectedAnswerIndex === idx;
                 const isCorrect = idx === currentQ.correctAnswerIndex;
 
-                let buttonStyle = "bg-white/80 dark:bg-stone-800/80 border-stone-200/80 dark:border-stone-700 hover:bg-white text-stone-900 dark:text-purple-100";
+                let buttonStyle = "bg-[#FAF6F0] border-[#E8B4B8]/60 hover:bg-white text-[#3D262A]";
 
                 if (isAnswered) {
                   if (isCorrect) {
-                    buttonStyle = "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 text-emerald-900 dark:text-emerald-200 font-semibold";
+                    buttonStyle = "bg-emerald-50 border-emerald-400 text-emerald-950 font-semibold ring-2 ring-emerald-200";
                   } else if (isSelected) {
-                    buttonStyle = "bg-rose-50 dark:bg-rose-950/60 border-rose-300 text-rose-900 dark:text-rose-200";
+                    buttonStyle = "bg-rose-50 border-rose-400 text-rose-950 ring-2 ring-rose-200";
                   } else {
-                    buttonStyle = "opacity-50 border-stone-200 bg-white/40 text-stone-500";
+                    buttonStyle = "bg-stone-50 border-stone-200 text-stone-400 opacity-60";
                   }
                 }
 
                 return (
                   <button
                     key={idx}
-                    type="button"
-                    disabled={isAnswered}
                     onClick={() => handleSelectOption(idx)}
-                    className={`w-full min-h-[48px] p-4 rounded-2xl text-left text-xs sm:text-sm font-sans flex items-center justify-between transition-all border shadow-sm active:scale-98 ${buttonStyle}`}
+                    disabled={isAnswered}
+                    className={`w-full text-left p-3.5 sm:p-4 rounded-2xl border text-xs sm:text-sm transition-all duration-200 flex items-center justify-between gap-3 ${buttonStyle}`}
                   >
-                    <span className="leading-snug pr-2">{option}</span>
-                    {isAnswered && isCorrect && <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />}
-                    {isAnswered && isSelected && !isCorrect && <XCircle size={18} className="text-rose-500 shrink-0" />}
+                    <span>{option}</span>
+                    {isAnswered && isCorrect && (
+                      <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                    )}
+                    {isAnswered && isSelected && !isCorrect && (
+                      <XCircle size={16} className="text-rose-600 shrink-0" />
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Explanation & Next Button */}
+            {/* Explanation card after answering */}
             {isAnswered && (
-              <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-purple-950/40 border border-amber-200/80 dark:border-purple-800 animate-in fade-in duration-300 space-y-3">
-                <p className="text-xs sm:text-sm text-stone-700 dark:text-purple-200 leading-relaxed font-sans">
-                  {currentQ.explanation}
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleNextQuestion}
-                    className={`px-5 py-2.5 rounded-full font-serif font-bold text-xs transition-all shadow-md min-h-[44px] ${themeConfig.primaryButtonClass}`}
-                  >
-                    {currentQuestionIndex < questions.length - 1 ? "Next Memory →" : "See Final Score 🏆"}
-                  </button>
-                </div>
+              <div className="p-3.5 rounded-2xl bg-[#FFF5F6] border border-[#E8B4B8]/70 text-xs sm:text-sm text-[#3D262A] mb-5 animate-in fade-in duration-300">
+                <span className="font-serif font-bold text-[#6B2D38] block mb-1">
+                  {selectedAnswerIndex === currentQ.correctAnswerIndex ? "Spot on! 🎉" : "Not quite! 💡"}
+                </span>
+                <p className="font-sans text-[#3D262A]/90">{currentQ.explanation}</p>
               </div>
+            )}
+
+            {/* Next Button */}
+            {isAnswered && (
+              <button
+                onClick={handleNextQuestion}
+                className="w-full py-3 rounded-full text-xs sm:text-sm font-serif font-semibold bg-gradient-to-r from-[#C46879] to-[#6B2D38] text-white shadow-lg shadow-[#C46879]/30 hover:scale-102 transition-all"
+              >
+                {currentQuestionIndex < questions.length - 1 ? "Next Memory" : "View Final Score"}
+              </button>
             )}
           </div>
         ) : (
-          /* Quiz Results View */
+          /* Completion Screen */
           <div className="text-center py-6 animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-100 dark:bg-purple-900/60 flex items-center justify-center text-amber-600 dark:text-purple-300 shadow-lg">
-              <Trophy size={32} className="animate-bounce" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FFF5F6] border-2 border-[#E8B4B8] flex items-center justify-center text-[#C46879] shadow-lg">
+              <Trophy size={32} />
             </div>
 
-            <h3 className="font-serif font-bold text-2xl text-stone-900 dark:text-purple-100 mb-1">
-              You Scored {score} of {questions.length}!
+            <h3 className="font-serif font-bold text-2xl text-[#3D262A] mb-1">
+              Quiz Completed! 🥂
             </h3>
 
-            <p className="font-sans text-xs sm:text-sm text-stone-700 dark:text-purple-200 max-w-sm mx-auto mb-6 leading-relaxed">
+            <p className="font-mono text-sm text-[#C46879] font-bold mb-3">
+              You scored {score} out of {questions.length}
+            </p>
+
+            <p className="font-serif italic text-xs sm:text-sm text-[#6B2D38]/85 max-w-xs mx-auto mb-6 leading-relaxed">
               {config.passingScoreMessage ||
-                "You know our love story by heart! Here's to writing a million more memories together. 💖"}
+                "No matter the score, every single memory with you is already etched forever in my heart."}
             </p>
 
             <button
-              type="button"
               onClick={restartQuiz}
-              className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-serif font-bold text-xs shadow-lg transition-transform active:scale-95 min-h-[44px] ${themeConfig.primaryButtonClass}`}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-semibold bg-[#FAF6F0] hover:bg-white text-[#6B2D38] border border-[#E8B4B8] shadow-sm transition-all"
             >
-              <RotateCcw size={14} />
-              <span>Play Quiz Again</span>
+              <RotateCcw size={13} />
+              <span>Play Again</span>
             </button>
           </div>
         )}
@@ -170,4 +181,3 @@ export function AnniversaryQuizSection({ config, theme }: Props) {
     </section>
   );
 }
-

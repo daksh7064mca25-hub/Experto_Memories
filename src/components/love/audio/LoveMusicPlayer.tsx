@@ -21,7 +21,7 @@ export function LoveMusicPlayer({
 }: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -86,7 +86,7 @@ export function LoveMusicPlayer({
           type="button"
           onClick={() => setIsMinimized(false)}
           aria-label="Expand soundtrack player"
-          className="relative flex items-center justify-center w-11 h-11 rounded-full bg-[#1c050a]/95 backdrop-blur-md border border-amber-400/50 shadow-xl text-amber-300 hover:scale-105 active:scale-95 transition-all"
+          className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white/95 backdrop-blur-md border border-[#E8D5C4] shadow-xl text-rose-800 hover:scale-105 active:scale-95 transition-all"
           title={`${songTitle} (Click to expand)`}
         >
           <div
@@ -94,7 +94,7 @@ export function LoveMusicPlayer({
               isPlaying ? "animate-spin-slow" : ""
             }`}
             style={{
-              background: "radial-gradient(circle, #4a0e17 35%, #2d080e 70%, #150205 100%)",
+              background: "radial-gradient(circle, #5e111d 35%, #3a0a12 70%, #1a0306 100%)",
             }}
           >
             <div className="w-2.5 h-2.5 rounded-full bg-amber-400 border border-stone-800 flex items-center justify-center">
@@ -102,12 +102,12 @@ export function LoveMusicPlayer({
             </div>
           </div>
           {isPlaying && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-[#1c050a] animate-pulse" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
           )}
         </button>
       ) : (
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#1c050a]/95 backdrop-blur-md border border-amber-400/40 shadow-2xl shadow-rose-950/80 text-xs font-medium text-rose-100 min-h-[44px]">
+          <div className="flex items-center gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-white/95 backdrop-blur-md border border-[#E8D5C4] shadow-2xl shadow-rose-950/10 text-xs font-medium text-stone-800 min-h-[44px]">
             {/* Animated Rotating Vinyl Icon */}
             <button
               type="button"
@@ -115,7 +115,7 @@ export function LoveMusicPlayer({
               className="relative flex items-center justify-center w-8 h-8 rounded-full text-amber-200 shadow-inner cursor-pointer hover:scale-110 transition-transform shrink-0"
               style={{
                 background: "radial-gradient(circle, #5e111d 35%, #3a0a12 70%, #1a0306 100%)",
-                boxShadow: isPlaying ? "0 0 12px rgba(244, 63, 94, 0.5)" : "none",
+                boxShadow: isPlaying ? "0 0 10px rgba(225, 29, 72, 0.4)" : "none",
               }}
             >
               <div className={`w-full h-full flex items-center justify-center ${isPlaying ? "animate-spin-slow" : ""}`}>
@@ -132,16 +132,16 @@ export function LoveMusicPlayer({
 
             {/* Track Info */}
             <div className="flex flex-col text-left leading-tight pr-1 overflow-hidden max-w-[130px] sm:max-w-[190px]">
-              <span className="font-serif font-semibold text-rose-100 truncate text-[12px] sm:text-[13px]">
+              <span className="font-serif font-bold text-[#3a0d15] truncate text-[12px] sm:text-[13px]">
                 {songTitle}
               </span>
-              <span className="text-[10px] text-amber-300/80 truncate">
+              <span className="text-[10px] text-rose-700/80 truncate">
                 {artistName}
               </span>
               {/* Mini progress bar */}
-              <div className="w-full bg-rose-950/80 rounded-full h-1 mt-1 overflow-hidden">
+              <div className="w-full bg-stone-200 rounded-full h-1 mt-1 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-amber-400 to-rose-400 h-full rounded-full transition-all duration-200"
+                  className="bg-gradient-to-r from-rose-500 to-amber-500 h-full rounded-full transition-all duration-200"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -151,7 +151,7 @@ export function LoveMusicPlayer({
             <button
               type="button"
               onClick={toggleMute}
-              className="p-1 rounded-full hover:bg-white/10 text-rose-300 hover:text-white transition-colors"
+              className="p-1 rounded-full hover:bg-stone-100 text-stone-600 hover:text-stone-900 transition-colors"
               title={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
@@ -161,7 +161,7 @@ export function LoveMusicPlayer({
             <button
               type="button"
               onClick={() => setIsMinimized(true)}
-              className="text-[10px] text-amber-300/60 hover:text-amber-200 px-1 py-0.5 rounded transition-colors"
+              className="text-[10px] text-stone-400 hover:text-stone-700 px-1 py-0.5 rounded transition-colors"
               title="Minimize player"
             >
               —

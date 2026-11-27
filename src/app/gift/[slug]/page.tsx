@@ -2,6 +2,7 @@ import { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { projectService } from "@/services/project.service";
+import { toClientProjectDTO } from "@/lib/project-dto";
 import { getAdminSession, getCustomerSession, verifyWebsiteUnlockToken } from "@/lib/auth";
 import { ApologyRenderer } from "@/components/apology/ApologyRenderer";
 import { AnniversaryRenderer } from "@/components/anniversary/AnniversaryRenderer";
@@ -128,7 +129,7 @@ export default async function GiftSlugPage({ params, searchParams }: Props) {
       const customerSession = await getCustomerSession();
       if (
         customerSession &&
-        (project.customerId === customerSession.userId ||
+        (String(project.customerId || "") === customerSession.userId ||
           (project.customerEmail &&
             project.customerEmail.toLowerCase() === customerSession.email.toLowerCase()))
       ) {
@@ -186,28 +187,106 @@ export default async function GiftSlugPage({ params, searchParams }: Props) {
     }
   }
 
+  // Birthday Scratch Surprise: Resolve and persist random reward if Mode B (Random Surprise)
+  if (project.occasionType === "birthday" && Array.isArray(project.sections)) {
+    const gameSection = project.sections.find((s) => s.type === "birthday_game");
+    if (gameSection && gameSection.config) {
+      const gameConfig = gameSection.config;
+      if (gameConfig.mode === "random") {
+        const pool = Array.isArray(gameConfig.randomRewards) && gameConfig.randomRewards.length > 0
+          ? gameConfig.randomRewards.filter((r: any) => r.enabled !== false)
+          : Array.isArray(gameConfig.surprises) && gameConfig.surprises.length > 0
+          ? gameConfig.surprises.filter((s: any) => s.enabled !== false)
+          : [];
+
+        if (pool.length > 0) {
+          let chosen = pool.find((r: any) => r.id === gameConfig.selectedRewardId);
+          let needsPersist = false;
+
+          if (!chosen) {
+            // First time opened by visitor: pick deterministic reward from candidate pool based on project identity
+            let hash = 0;
+            const seed = String(project._id || project.slug || "");
+            for (let i = 0; i < seed.length; i++) {
+              hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+            }
+            const selectedIdx = pool.length > 0 ? hash % pool.length : 0;
+            chosen = pool[selectedIdx];
+            gameConfig.selectedRewardId = chosen.id;
+            needsPersist = true;
+          }
+
+          if (chosen && (!gameConfig.revealedReward || needsPersist)) {
+            gameConfig.revealedReward = {
+              id: chosen.id,
+              title: chosen.title,
+              description: chosen.description || "",
+              redemptionInstructions:
+                chosen.redemptionInstructions || "Show this card to the sender anytime to claim your surprise!",
+              icon: chosen.icon || "gift",
+              badge: chosen.badge || "Special Treat",
+              category: chosen.category || "experience",
+              enabled: true,
+            };
+          }
+
+          if (needsPersist) {
+            try {
+              await projectService.update(project._id || project.slug, {
+                sections: project.sections,
+              });
+            } catch (err) {
+              console.error("Failed to persist selected birthday scratch reward:", err);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Serialize project to clean, safe Client Component DTO
+  // Strips passwordHash, converts ObjectIds & Dates, removes non-plain prototypes
+  const clientProject = toClientProjectDTO(project);
+
+  // Conceal unselected candidate rewards from public client payload for Mode B
+  if (
+    clientProject.occasionType === "birthday" &&
+    !isAuthorizedPreview &&
+    Array.isArray(clientProject.sections)
+  ) {
+    const clientGameSec = clientProject.sections.find((s) => s.type === "birthday_game");
+    if (clientGameSec && clientGameSec.config && clientGameSec.config.mode === "random") {
+      delete clientGameSec.config.randomRewards;
+      if (Array.isArray(clientGameSec.config.surprises) && clientGameSec.config.surprises.length > 1) {
+        if (clientGameSec.config.revealedReward) {
+          clientGameSec.config.surprises = [clientGameSec.config.revealedReward];
+        }
+      }
+    }
+  }
+
   // Dynamic Product Dispatch:
   // occasionType === "wedding" -> WeddingRenderer (Digital Wedding Invitations)
   // occasionType === "birthday" -> BirthdayRenderer (The Birthday Wonderland)
   // occasionType === "love" -> LoveRenderer (The Secret World of Us)
   // occasionType === "anniversary" -> AnniversaryRenderer (Our Love Story)
   // occasionType === "apology" or undefined -> ApologyRenderer (full backward compatibility)
-  if (project.occasionType === "wedding") {
-    return <WeddingRenderer project={project} previewMode={isAuthorizedPreview} />;
+  if (clientProject.occasionType === "wedding") {
+    return <WeddingRenderer project={clientProject} previewMode={false} />;
   }
 
-  if (project.occasionType === "birthday") {
-    return <BirthdayRenderer project={project} previewMode={isAuthorizedPreview} />;
+  if (clientProject.occasionType === "birthday") {
+    return <BirthdayRenderer project={clientProject} previewMode={false} />;
   }
 
-  if (project.occasionType === "love") {
-    return <LoveRenderer project={project} previewMode={isAuthorizedPreview} />;
+  if (clientProject.occasionType === "love") {
+    return <LoveRenderer project={clientProject} previewMode={false} />;
   }
 
-  if (project.occasionType === "anniversary") {
-    return <AnniversaryRenderer project={project} previewMode={isAuthorizedPreview} />;
+  if (clientProject.occasionType === "anniversary") {
+    return <AnniversaryRenderer project={clientProject} previewMode={false} />;
   }
 
-  return <ApologyRenderer project={project} previewMode={isAuthorizedPreview} />;
+  return <ApologyRenderer project={clientProject} previewMode={false} />;
 }
 

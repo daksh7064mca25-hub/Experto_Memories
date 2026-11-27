@@ -18,37 +18,39 @@ export function AnniversaryParticles({ theme }: { theme: ThemeId }) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    // Check reduced motion preference
-    if (typeof window !== "undefined") {
-      const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-      setPrefersReducedMotion(mediaQuery.matches);
-    }
+    requestAnimationFrame(() => {
+      // Check reduced motion preference
+      if (typeof window !== "undefined") {
+        const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+        setPrefersReducedMotion(mediaQuery.matches);
+      }
 
-    // Curate symbols according to anniversary themes
-    let symbols = ["💖", "✨", "🌸", "💕"];
+      // Curate symbols according to anniversary themes
+      let symbols = ["💖", "✨", "🌸", "💕"];
 
-    if (theme === "golden-forever") {
-      symbols = ["✨", "🌟", "🥂", "🌹", "✦"];
-    } else if (theme === "our-universe") {
-      symbols = ["⭐", "🌌", "✨", "✦", "💫"];
-    } else if (theme === "sunset-love") {
-      symbols = ["🌅", "🧡", "✨", "🍑", "🌸"];
-    } else if (theme === "pink-paradise") {
-      symbols = ["🎀", "💕", "🌸", "✨", "💖"];
-    }
+      if (theme === "golden-forever") {
+        symbols = ["✨", "🌟", "🥂", "🌹", "✦"];
+      } else if (theme === "our-universe") {
+        symbols = ["⭐", "🌌", "✨", "✦", "💫"];
+      } else if (theme === "sunset-love") {
+        symbols = ["🌅", "🧡", "✨", "🍑", "🌸"];
+      } else if (theme === "pink-paradise") {
+        symbols = ["🎀", "💕", "🌸", "✨", "💖"];
+      }
 
-    // Generate lightweight, non-intensive particle set (12 items)
-    const items: Particle[] = Array.from({ length: 12 }).map((_, i) => ({
-      id: i,
-      x: Math.floor(Math.random() * 92) + 4,
-      size: Math.floor(Math.random() * 12) + 14,
-      duration: Math.floor(Math.random() * 8) + 12,
-      delay: Math.random() * 6,
-      symbol: symbols[i % symbols.length],
-      opacity: Math.random() * 0.35 + 0.25,
-    }));
+      // Generate lightweight, non-intensive particle set (12 items)
+      const items: Particle[] = Array.from({ length: 12 }).map((_, i) => ({
+        id: i,
+        x: Math.floor(Math.random() * 92) + 4,
+        size: Math.floor(Math.random() * 12) + 14,
+        duration: Math.floor(Math.random() * 8) + 12,
+        delay: Math.random() * 6,
+        symbol: symbols[i % symbols.length],
+        opacity: Math.random() * 0.35 + 0.25,
+      }));
 
-    setParticles(items);
+      setParticles(items);
+    });
   }, [theme]);
 
   if (prefersReducedMotion) return null;

@@ -32,22 +32,26 @@ export function DemoExperience({ initialTheme = "cotton-candy", isEmbedded = fal
 
   // Detect iframe embedding on mount & reset demo session storage
   useEffect(() => {
-    try {
-      const inIframe = window.self !== window.top;
-      setIsInIframe(inIframe || isEmbedded);
-    } catch {
-      setIsInIframe(true);
-    }
+    Promise.resolve().then(() => {
+      try {
+        const inIframe = window.self !== window.top;
+        setIsInIframe(inIframe || isEmbedded);
+      } catch {
+        setIsInIframe(true);
+      }
+    });
 
     // Reset demo coupons on new session mount so experience is always fresh
     try {
       localStorage.removeItem("em_redeemed_coupons");
+      localStorage.removeItem("em_redeemed_coupons_demo-apology");
     } catch {}
   }, [isEmbedded]);
 
   const handleResetDemo = () => {
     try {
       localStorage.removeItem("em_redeemed_coupons");
+      localStorage.removeItem("em_redeemed_coupons_demo-apology");
     } catch {}
     setDemoKey((prev) => prev + 1);
   };
@@ -181,17 +185,9 @@ export function DemoExperience({ initialTheme = "cotton-candy", isEmbedded = fal
         </div>
       </noscript>
 
-      {/* 5. FOOTER NOTE FOR DEMO VISITORS */}
-      <footer className="w-full bg-white/80 backdrop-blur-sm border-t border-rose-200/60 py-6 px-4 text-center text-xs text-rose-800/70 select-none">
-        <p className="font-serif font-bold text-sm text-rose-950 mb-1">
-          ExpertoMemories &mdash; &ldquo;A Little Sorry, A Lot of Love&rdquo;
-        </p>
-        <p className="max-w-md mx-auto text-[11px] leading-relaxed opacity-80 mb-3">
-          This is an interactive public demo featuring sample photographs and fictional characters.
-          Every gift website commissioned through our store is fully customized with personal letters,
-          private photographs, custom music, and bespoke promises.
-        </p>
-        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-rose-600">
+      {/* 5. DEMO CONTROLS BAR */}
+      <footer className="w-full bg-white/80 backdrop-blur-sm border-t border-rose-200/60 py-4 px-4 text-center text-xs text-stone-500 select-none font-sans">
+        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-rose-600 mb-1">
           <button type="button" onClick={handleResetDemo} className="hover:underline flex items-center gap-1">
             <RotateCcw size={11} /> Reset Sample
           </button>
@@ -204,6 +200,9 @@ export function DemoExperience({ initialTheme = "cotton-candy", isEmbedded = fal
             <ArrowLeft size={11} /> Back to Catalog
           </Link>
         </div>
+        <p className="text-[11px] text-stone-400">
+          Fictional Sample Preview
+        </p>
       </footer>
     </div>
   );

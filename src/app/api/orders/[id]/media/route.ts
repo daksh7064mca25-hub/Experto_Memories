@@ -6,6 +6,7 @@ import { Order } from "@/models/Order";
 import { MediaAsset } from "@/models/MediaAsset";
 import { getAdminSession } from "@/lib/auth";
 import { deleteR2Object, getR2BucketName, isR2Configured } from "@/lib/r2";
+import mongoose from "mongoose";
 
 const RecordMediaSchema = z.object({
   key: z.string().min(1, "Object key is required"),
@@ -22,6 +23,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
     const body = await req.json();
     const validated = RecordMediaSchema.parse(body);
 
@@ -135,6 +139,9 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
     const body = await req.json();
     const { key, assetId, token: bodyToken } = body;
 

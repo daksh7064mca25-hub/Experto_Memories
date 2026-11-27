@@ -47,7 +47,7 @@ const CustomDomainSchema = new Schema(
     dnsInstructions: {
       recordType: { type: String, default: "CNAME" },
       host: { type: String, default: "@" },
-      target: { type: String, default: "cname.expertomemories.com" },
+      target: { type: String, default: "cname.expertomemories.shop" },
     },
     verifiedAt: { type: Date },
     notes: { type: String },
@@ -88,6 +88,7 @@ const WebsiteProjectSchema = new Schema<IWebsiteProjectDoc>(
       default: "cotton-candy",
     },
     sections: [SectionSchema],
+    couponRedemptions: { type: Schema.Types.Mixed, default: {} },
     audioSettings: { type: AudioSettingsSchema, default: () => ({}) },
     status: {
       type: String,

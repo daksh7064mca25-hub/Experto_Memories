@@ -1,7 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { CATALOGUE_TEMPLATES } from "@/config/catalog";
-import { WeddingStationeryCard } from "@/components/wedding/WeddingStationeryCard";
+import { getEffectivePricing } from "@/lib/pricing";
+import { WeddingCollectionsGrid } from "@/components/wedding/WeddingCollectionsGrid";
+import { PublicHeader } from "@/components/navigation/PublicHeader";
+import { CrossCategoryDiscovery } from "@/components/navigation/CrossCategoryDiscovery";
 import {
   Sparkles,
   ArrowRight,
@@ -13,10 +17,13 @@ import {
   Compass,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "The Wedding Atelier & Collections | ExpertoMemories",
   description:
-    "Explore 10 bespoke cultural wedding invitation collections with animated opening ceremonies, multi-event itineraries, Google Maps navigation, and guest RSVP tracking.",
+    "Explore 7 bespoke wedding invitation collections with animated opening ceremonies, multi-event itineraries, Google Maps navigation, and guest RSVP tracking.",
   openGraph: {
     title: "The Wedding Atelier — Bespoke Digital Invitations | ExpertoMemories",
     description: "An invitation experience guests will cherish forever. Cultural opening reveals, venue maps & guest RSVP.",
@@ -24,67 +31,38 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WeddingsDiscoveryPage() {
-  const weddingTemplates = CATALOGUE_TEMPLATES.filter(
-    (t) => t.occasionType === "wedding" && t.isActive
-  );
+export default async function WeddingsDiscoveryPage() {
+  let productsPricing: any[] = [];
+  try {
+    const { effectivePricing } = await getEffectivePricing();
+    productsPricing = effectivePricing.products || [];
+  } catch (err) {}
+
+  const isWeddingActive =
+    productsPricing.length > 0
+      ? productsPricing.find(
+          (p) =>
+            p.slug.toLowerCase() === "wedding" ||
+            p.occasionType.toLowerCase() === "wedding"
+        )?.isActive !== false
+      : true;
+
+  const weddingTemplates = isWeddingActive
+    ? CATALOGUE_TEMPLATES.filter(
+        (t) => t.occasionType === "wedding" && t.isActive
+      )
+    : [];
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2B1B17] selection:bg-[#541D2B] selection:text-white font-sans">
-      {/* 1. ATELIER EDITORIAL HEADER */}
-      <header className="border-b border-[#EAE3D9] bg-[#FAF7F2]/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-serif text-2xl font-bold tracking-tight text-[#541D2B] group-hover:opacity-90 transition-opacity">
-              ExpertoMemories
-            </span>
-            <span className="text-[10px] uppercase font-mono font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-[#C5A36A]/15 text-[#541D2B] border border-[#C5A36A]/30">
-              Wedding Atelier
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8 text-xs font-serif font-semibold text-stone-700">
-            <Link href="/" className="hover:text-[#541D2B] transition-colors">
-              All Celebrations
-            </Link>
-            <Link href="/gifts" className="hover:text-[#541D2B] transition-colors">
-              Digital Gifts
-            </Link>
-            <Link href="/weddings" className="text-[#541D2B] border-b-2 border-[#541D2B] pb-1">
-              Wedding Invitations
-            </Link>
-            <Link href="/birthdays" className="hover:text-[#541D2B] transition-colors">
-              Birthdays
-            </Link>
-            <Link href="/faq" className="hover:text-[#541D2B] transition-colors">
-              FAQ
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/demo/wedding/royal"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-serif font-semibold text-stone-700 hover:text-[#541D2B] transition"
-            >
-              <Sparkles size={13} className="text-[#C5A36A]" />
-              <span>Live Sample</span>
-            </Link>
-            <Link
-              href="/dashboard/create?occasion=wedding"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold bg-[#541D2B] text-[#FAF7F2] hover:bg-[#3E131E] transition shadow-xs hover:shadow-md"
-            >
-              <span>Create Invitation</span>
-              <ArrowRight size={13} />
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2B1B17] selection:bg-[#541D2B] selection:text-white font-sans overflow-x-hidden">
+      {/* 1. UNIVERSAL NAVBAR */}
+      <PublicHeader />
 
       {/* 2. ATELIER HERO */}
       <section className="relative pt-16 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-serif font-bold uppercase tracking-widest mb-6 bg-[#C5A36A]/15 text-[#541D2B] border border-[#C5A36A]/30">
           <Sparkles size={13} className="text-[#C5A36A]" />
-          <span>The Wedding Atelier &bull; 10 Cultural Traditions</span>
+          <span>The Wedding Atelier &bull; 7 Bespoke Collections</span>
         </div>
 
         <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#541D2B] max-w-4xl mx-auto leading-[1.1] mb-6">
@@ -146,26 +124,41 @@ export default function WeddingsDiscoveryPage() {
         </div>
       </section>
 
-      {/* 3. THE 10 BESPOKE COLLECTIONS (Stationery Atelier Grid) */}
+      {/* 3. THE 7 BESPOKE COLLECTIONS (Stationery Atelier Grid) */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" id="collections">
         <div className="text-center mb-14">
           <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-[#8C7A6B] block mb-2">
             THE ATELIER ARCHIVE
           </span>
           <h2 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-[#541D2B] mb-3">
-            10 Bespoke Wedding Collections
+            7 Bespoke Wedding Collections
           </h2>
           <p className="text-sm sm:text-base text-stone-600 font-serif italic max-w-xl mx-auto">
             Each collection is thoughtfully designed to honor cultural customs, Vedic rituals, architectural minimalism, and grand celebrations.
           </p>
         </div>
 
-        {/* Clean Luxury Stationery Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
-          {weddingTemplates.map((template) => (
-            <WeddingStationeryCard key={template.id} template={template} />
-          ))}
-        </div>
+        {/* Clean Luxury Stationery Cards Grid with Cultural Filters */}
+        {weddingTemplates.length > 0 ? (
+          <WeddingCollectionsGrid templates={weddingTemplates} />
+        ) : (
+          <div className="text-center py-16 bg-white rounded-3xl border border-[#EAE3D9] p-8 max-w-md mx-auto">
+            <Sparkles size={36} className="mx-auto text-[#C5A36A] mb-3" />
+            <h4 className="font-serif text-lg font-bold text-[#541D2B] mb-1">
+              Wedding Atelier Currently Closed for New Bookings
+            </h4>
+            <p className="text-xs text-stone-600 mb-4">
+              Our royal wedding collections are currently undergoing seasonal updates. Please explore our other celebration experiences.
+            </p>
+            <Link
+              href="/gifts"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#541D2B] text-[#FAF7F2] text-xs font-serif font-bold rounded-xl shadow-sm hover:bg-[#3E131E] transition"
+            >
+              <span>Explore Love &amp; Relationship Gifts</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* 4. ATELIER PHILOSOPHY */}
@@ -238,6 +231,34 @@ export default function WeddingsDiscoveryPage() {
           <ArrowRight size={15} />
         </Link>
       </section>
+
+      {/* CROSS-CATEGORY DISCOVERY */}
+      <CrossCategoryDiscovery currentCategory="wedding" />
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#EAE3D9] bg-[#FAF7F2] py-12 px-4 text-center">
+        <div className="max-w-4xl mx-auto space-y-3">
+          <div className="flex items-center justify-center">
+            <Link href="/" className="inline-flex items-center gap-2.5 group" aria-label="ExpertoMemories Home">
+              <div className="relative h-7 w-auto shrink-0 flex items-center">
+                <Image
+                  src="/branding/expertomemories-monogram.png"
+                  alt="ExpertoMemories EM Monogram"
+                  width={505}
+                  height={321}
+                  className="h-7 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+              <span className="font-serif font-bold text-base text-[#211715]">
+                ExpertoMemories
+              </span>
+            </Link>
+          </div>
+          <p className="text-[11px] text-stone-500 font-serif">
+            © 2026 ExpertoMemories Wedding Atelier. All rights reserved. Bespoke Royal Invitations &amp; Stationery.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

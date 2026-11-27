@@ -50,7 +50,7 @@ export async function GET(req: Request, context: Context) {
           _id: populatedProject._id.toString(),
           slug: populatedProject.slug,
           title: populatedProject.title,
-          occasion: populatedProject.occasion,
+          occasion: populatedProject.occasionType,
           status: populatedProject.status,
           customDomain: populatedProject.customDomain,
         } : null,
@@ -245,6 +245,10 @@ export async function DELETE(req: Request, context: Context) {
     }
 
     const { id } = await context.params;
+    const mongoose = await import("mongoose");
+    if (!mongoose.default.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
     await connectToDatabase();
     const deleted = await Order.findByIdAndDelete(id);
     if (!deleted) {

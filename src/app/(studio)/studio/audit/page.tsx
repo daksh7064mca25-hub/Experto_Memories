@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   ScrollText,
@@ -25,7 +25,7 @@ export default function AdminAuditLogPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -49,11 +49,39 @@ export default function AdminAuditLogPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [targetFilter, router]);
 
   useEffect(() => {
-    fetchLogs();
-  }, [targetFilter]);
+    let ignore = false;
+    const params = new URLSearchParams();
+    if (targetFilter !== "all") params.set("targetType", targetFilter);
+
+    fetch(`/api/admin/audit?${params.toString()}`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (res.status === 401) {
+          router.push("/admin/login");
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!ignore && data?.logs) {
+          setLogs(data.logs);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch audit log:", err);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [targetFilter, router]);
 
   const filteredLogs = logs.filter((log) => {
     if (!searchQuery.trim()) return true;
@@ -98,7 +126,10 @@ export default function AdminAuditLogPage() {
 
         <button
           type="button"
-          onClick={fetchLogs}
+          onClick={() => {
+            setLoading(true);
+            fetchLogs();
+          }}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 shadow-sm transition-colors self-start sm:self-auto"
         >
           <RefreshCw size={13} />

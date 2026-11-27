@@ -136,29 +136,29 @@ export const WeddingRSVPSection: React.FC<Props> = ({
               <label className={`block text-xs uppercase tracking-wider font-semibold mb-2 ${theme.textMuted}`}>
                 Will you be attending? *
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, attendanceStatus: "attending" })}
-                  className={`py-3 px-4 rounded-xl text-sm font-serif font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
+                  className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-serif font-semibold border transition cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 ${
                     formData.attendanceStatus === "attending"
                       ? "bg-[#D4AF37] text-[#2E0B14] border-[#D4AF37] shadow-md"
                       : "bg-white/5 border-white/10 text-[#E6D9C8] hover:bg-white/10"
                   }`}
                 >
-                  <Sparkles size={16} />
-                  <span>Joyfully Accept</span>
+                  <Sparkles size={14} className="shrink-0" />
+                  <span className="truncate">Joyfully Accept</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, attendanceStatus: "declined" })}
-                  className={`py-3 px-4 rounded-xl text-sm font-serif font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
+                  className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-serif font-semibold border transition cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 ${
                     formData.attendanceStatus === "declined"
                       ? "bg-stone-700 text-white border-stone-500 shadow-md"
                       : "bg-white/5 border-white/10 text-[#E6D9C8] hover:bg-white/10"
                   }`}
                 >
-                  <span>Regretfully Decline</span>
+                  <span className="truncate">Regretfully Decline</span>
                 </button>
               </div>
             </div>

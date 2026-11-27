@@ -580,6 +580,143 @@ export function SectionControls({
         </div>
       )}
 
+      {/* COUPON BOOK CONTROLS */}
+      {type === "coupon_book" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Headline</label>
+            <input
+              type="text"
+              value={config.headline || ""}
+              onChange={(e) => update({ headline: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1">Description</label>
+            <input
+              type="text"
+              value={config.subtext || ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl bg-pink-50/50 border border-pink-200 text-xs"
+            />
+          </div>
+
+          {/* 6. REDEMPTION LIMIT SETTING */}
+          <div>
+            <label className="block text-xs font-semibold text-rose-900 mb-1.5">
+              How many coupons can your recipient redeem?
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 1, label: "1 special wish" },
+                { value: 2, label: "2 special wishes" },
+              ].map((opt) => {
+                const isSelected = (config.maxRedemptions ?? 2) === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    data-testid={`coupon-limit-option-${opt.value}`}
+                    onClick={() => update({ maxRedemptions: opt.value })}
+                    className={`p-2.5 rounded-xl border text-xs font-serif text-center transition-all ${
+                      isSelected
+                        ? "bg-rose-50 border-rose-400 text-rose-950 font-bold shadow-xs ring-1 ring-rose-400"
+                        : "bg-white border-stone-200 text-stone-600 hover:bg-stone-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-stone-500 mt-1.5">
+              Your recipient can choose any {(config.maxRedemptions ?? 2) === 1 ? "1 voucher" : "2 vouchers"} from the entire collection.
+            </p>
+          </div>
+
+          {/* COUPONS LIST */}
+          <div className="space-y-3 pt-2 border-t border-pink-100">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-rose-900">
+                Coupons ({config.coupons?.length || 0})
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  update({
+                    coupons: [
+                      ...(config.coupons || []),
+                      {
+                        id: `coupon-${Date.now()}`,
+                        title: "New Wish Voucher",
+                        description: "A special wish granted anytime you ask.",
+                        iconName: "Heart",
+                        expiryText: "Never Expires",
+                        code: `WISH-${(config.coupons?.length || 0) + 1}`,
+                      },
+                    ],
+                  })
+                }
+                className="text-[11px] text-rose-600 font-bold hover:underline flex items-center gap-1"
+              >
+                <Plus size={12} /> Add Coupon
+              </button>
+            </div>
+
+            {(config.coupons || []).map((c: ApologyCoupon, idx: number) => (
+              <div
+                key={c.id || idx}
+                className="p-3 rounded-xl bg-pink-50/60 border border-pink-200 space-y-2 relative"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-rose-900">Coupon #{idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = config.coupons.filter((_: any, i: number) => i !== idx);
+                      update({ coupons: next });
+                    }}
+                    className="text-stone-400 hover:text-rose-600"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-stone-500 mb-0.5">Title</label>
+                  <input
+                    type="text"
+                    value={c.title || ""}
+                    onChange={(e) => {
+                      const next = [...config.coupons];
+                      next[idx] = { ...c, title: e.target.value };
+                      update({ coupons: next });
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-pink-200 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-stone-500 mb-0.5">Description</label>
+                  <textarea
+                    rows={2}
+                    value={c.description || ""}
+                    onChange={(e) => {
+                      const next = [...config.coupons];
+                      next[idx] = { ...c, description: e.target.value };
+                      update({ coupons: next });
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-pink-200 text-xs"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* SCRATCH CARD CONTROLS */}
       {type === "scratch_card" && (
         <div className="space-y-4">

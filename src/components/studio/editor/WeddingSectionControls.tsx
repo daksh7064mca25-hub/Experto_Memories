@@ -51,8 +51,9 @@ export function WeddingSectionControls({
               onChange={(e) => update({ revealStyle: e.target.value })}
               className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 bg-white"
             >
+              <option value="mandap_garland">Traditional Hindu Mandir (Carved Temple, Bells &amp; Toran)</option>
+              <option value="hindu_mandir">Sacred Vedic Mandir Entrance (Interactive Bells &amp; Diyas)</option>
               <option value="palace_doors">Royal Palace Doors (Rajasthani Carved Teak &amp; Brass)</option>
-              <option value="mandap_garland">Traditional Mandap Garland (Marigold &amp; Lotus Garland)</option>
               <option value="phulkari_dhol">Punjabi Phulkari &amp; Dhol (Festive Beats)</option>
               <option value="sunrise_lotus">Sikh Sunrise Lotus (Golden Anand Karaj Unfold)</option>
               <option value="silk_parchment">Mughal Silk Farman (Emerald Jaali &amp; Tassels)</option>
@@ -62,6 +63,19 @@ export function WeddingSectionControls({
               <option value="passport_boarding">Luxury Destination Passport &amp; Boarding Pass</option>
               <option value="velvet_wax_seal">Midnight Velvet &amp; Gold Wax Seal</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("preview-opening"));
+                }
+              }}
+              className="w-full mt-2.5 py-2.5 px-3 rounded-xl text-xs font-serif font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+            >
+              <Sparkles size={14} className="text-amber-200 animate-pulse" />
+              <span>Test Opening Animation 🎬</span>
+            </button>
           </div>
 
           <div>
@@ -147,6 +161,54 @@ export function WeddingSectionControls({
               onChange={(e) => update({ audioNotice: e.target.value })}
               className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">
+              Custom 3D Model URL (.glb / .gltf)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. /models/hindu_temple.glb or R2 URL"
+              value={config.modelUrl ?? ""}
+              onChange={(e) => update({ modelUrl: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 font-mono"
+            />
+            <p className="text-[10px] text-stone-500 mt-1">
+              Leave blank to use the built-in procedural PBR 3D mandir with carved pillars, double teak doors &amp; bells.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">
+              Cinematic Transition Video URL (.mp4 / .webm)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. /videos/temple_entrance.mp4 or R2 URL"
+              value={config.transitionVideoUrl ?? ""}
+              onChange={(e) => update({ transitionVideoUrl: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 font-mono"
+            />
+            <p className="text-[10px] text-stone-500 mt-1">
+              Plays during door opening zoom into the sanctum before revealing the invitation.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">
+              Palace Hero Background Image URL
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. /images/royal/palace_hero.jpg or uploaded image URL"
+              value={config.heroBackgroundImageUrl ?? ""}
+              onChange={(e) => update({ heroBackgroundImageUrl: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 font-mono"
+            />
+            <p className="text-[10px] text-stone-500 mt-1">
+              Royal palace or heritage haveli photograph displayed as the main wedding hero background.
+            </p>
           </div>
 
           <div>
@@ -350,6 +412,293 @@ export function WeddingSectionControls({
       {/* 4. SACRED CELEBRATIONS & EVENTS */}
       {type === "wedding_events" && (
         <div className="space-y-4">
+          {/* CULTURAL CEREMONY CONFIGURATION (PUNJABI & SIKH TEMPLATES) */}
+          {(project.weddingDetails?.collection === "punjabi" ||
+            project.weddingDetails?.collection === "sikh" ||
+            project.templateId?.includes("punjabi") ||
+            project.templateId?.includes("sikh") ||
+            Boolean(config.ceremonyType) ||
+            Boolean(config.jaggoConfig)) && (
+            <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-300/80 space-y-4">
+              <div className="flex items-center gap-2 text-amber-950 font-bold text-xs pb-1 border-b border-amber-200">
+                <Sparkles size={14} className="text-amber-600" />
+                <span>Cultural Ceremony &amp; Sacred Rituals</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-900 mb-1">
+                  Wedding Ceremony Tradition
+                </label>
+                <select
+                  value={config.ceremonyType || "sikh"}
+                  onChange={(e) => update({ ceremonyType: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 bg-white font-medium"
+                >
+                  <option value="sikh">Option A — Sikh Anand Karaj (Four Sacred Laavan)</option>
+                  <option value="hindu">Option B — Punjabi Hindu Vivah (Seven Sacred Pheras)</option>
+                  <option value="custom">Option C — Custom / Other Sacred Union</option>
+                </select>
+                <p className="text-[10px] text-stone-500 mt-1">
+                  {config.ceremonyType === "hindu"
+                    ? "Renders festive marigold palette, floral mandap, sacred Agni/Pheras, Shubh Muhurat, and 7 Saptapadi explanation cards."
+                    : config.ceremonyType === "custom"
+                    ? "Renders a respectful, customized sacred ceremony presentation."
+                    : "Renders serene ivory & gold palette, Gurdwara details, sacred Gurbani quotation, and 4 Sacred Laavan explanation cards."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                    {config.ceremonyType === "hindu" ? "Mandap Venue Name" : config.ceremonyType === "custom" ? "Ceremony Venue" : "Gurdwara Sahib Name"}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={config.ceremonyType === "hindu" ? "e.g. The Heritage Mandap" : "e.g. Gurdwara Sri Guru Singh Sabha"}
+                    value={config.ceremonyVenueName ?? ""}
+                    onChange={(e) => update({ ceremonyVenueName: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                    Ceremony Timings
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 10:30 AM (Baraat) • 11:30 AM (Ceremony)"
+                    value={config.ceremonyTime ?? ""}
+                    onChange={(e) => update({ ceremonyTime: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                  Venue Full Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. GT Road, Amritsar, Punjab 143001"
+                  value={config.ceremonyAddress ?? ""}
+                  onChange={(e) => update({ ceremonyAddress: e.target.value })}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                    Ceremony Date
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sunday, December 21, 2026"
+                    value={config.ceremonyDate ?? ""}
+                    onChange={(e) => update({ ceremonyDate: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                    Google Maps URL
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://maps.google.com/?q=..."
+                    value={config.ceremonyMapsUrl ?? ""}
+                    onChange={(e) => update({ ceremonyMapsUrl: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                  />
+                </div>
+              </div>
+
+              {config.ceremonyType === "hindu" && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                    Shubh Muhurat / Auspicious Time
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 01:15 PM (Auspicious Lagna Muhurat)"
+                    value={config.shubhMuhurat ?? ""}
+                    onChange={(e) => update({ shubhMuhurat: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 mb-0.5">
+                  {config.ceremonyType === "hindu" ? "Sacred Vedic Sloka / Blessing" : "Sacred Gurbani Shabad Quote"}
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Sacred verse or blessing"
+                  value={config.ceremonyReligiousQuote ?? ""}
+                  onChange={(e) => update({ ceremonyReligiousQuote: e.target.value })}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="showRitualCardsToggle"
+                  checked={
+                    config.ceremonyType === "hindu"
+                      ? config.showPherasExplanation !== false
+                      : config.showLaavanExplanation !== false
+                  }
+                  onChange={(e) => {
+                    if (config.ceremonyType === "hindu") {
+                      update({ showPherasExplanation: e.target.checked });
+                    } else {
+                      update({ showLaavanExplanation: e.target.checked });
+                    }
+                  }}
+                  className="rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                />
+                <label htmlFor="showRitualCardsToggle" className="text-xs text-stone-800 font-medium">
+                  {config.ceremonyType === "hindu"
+                    ? "Display Seven Sacred Pheras (Saptapadi) explanation cards"
+                    : "Display Four Sacred Laavan explanation cards"}
+                </label>
+              </div>
+
+              {/* INTERACTIVE JAGGO CELEBRATION SCENE */}
+              <div className="pt-3 border-t border-amber-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
+                    <span>🪔 Interactive Jaggo Courtyard Scene</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={config.jaggoConfig?.enabled !== false}
+                    onChange={(e) =>
+                      update({
+                        jaggoConfig: {
+                          ...(config.jaggoConfig || {}),
+                          enabled: e.target.checked,
+                        },
+                      })
+                    }
+                    className="rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                  />
+                </div>
+                {config.jaggoConfig?.enabled !== false && (
+                  <div className="space-y-2 pl-2 border-l-2 border-amber-300">
+                    <input
+                      type="text"
+                      placeholder="Jaggo Scene Title"
+                      value={config.jaggoConfig?.title ?? "Raat Jaggo Di • Courtyard Celebration"}
+                      onChange={(e) =>
+                        update({
+                          jaggoConfig: {
+                            ...(config.jaggoConfig || {}),
+                            title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Jaggo Description"
+                      value={
+                        config.jaggoConfig?.description ??
+                        "Carry the glowing brass Jaggo on your head, sing boliya, and ignite the night with vibrant dhol beats!"
+                      }
+                      onChange={(e) =>
+                        update({
+                          jaggoConfig: {
+                            ...(config.jaggoConfig || {}),
+                            description: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* BARAAT ARRIVAL SCENE */}
+              <div className="pt-3 border-t border-amber-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
+                    <span>🐎 Shahi Baraat Arrival Scene</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={config.baraatConfig?.enabled !== false}
+                    onChange={(e) =>
+                      update({
+                        baraatConfig: {
+                          ...(config.baraatConfig || {}),
+                          enabled: e.target.checked,
+                        },
+                      })
+                    }
+                    className="rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                  />
+                </div>
+                {config.baraatConfig?.enabled !== false && (
+                  <div className="space-y-2 pl-2 border-l-2 border-amber-300">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Baraat Scene Title"
+                        value={config.baraatConfig?.title ?? "Shahi Baraat & Swagat"}
+                        onChange={(e) =>
+                          update({
+                            baraatConfig: {
+                              ...(config.baraatConfig || {}),
+                              title: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Assembly Time (e.g. 10:30 AM onwards)"
+                        value={config.baraatConfig?.time ?? "10:30 AM onwards"}
+                        onChange={(e) =>
+                          update({
+                            baraatConfig: {
+                              ...(config.baraatConfig || {}),
+                              time: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Baraat Description"
+                      value={
+                        config.baraatConfig?.description ??
+                        "The royal procession on the adorned steed with live dholis, bhangra dance, and warm Milni garland ceremony."
+                      }
+                      onChange={(e) =>
+                        update({
+                          baraatConfig: {
+                            ...(config.baraatConfig || {}),
+                            description: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs bg-white"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-stone-900">
               Wedding Functions ({(config.events || []).length})
@@ -638,9 +987,46 @@ export function WeddingSectionControls({
         </div>
       )}
 
-      {/* 8. TRAVEL & GUEST HOSPITALITY */}
+      {/* 5. VENUE, LOCATION & GUEST HOSPITALITY */}
       {type === "wedding_travel" && (
         <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Primary Celebration Venue Name</label>
+            <input
+              type="text"
+              placeholder="e.g. The Mandap Hall, BrijRama Palace"
+              value={config.venueName ?? ""}
+              onChange={(e) => update({ venueName: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Venue Full Address</label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Darbhanga Ghat, Varanasi, Uttar Pradesh 221001"
+              value={config.venueAddress ?? ""}
+              onChange={(e) => update({ venueAddress: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Google Maps Direction URL</label>
+            <input
+              type="url"
+              placeholder="https://maps.google.com/?q=..."
+              value={config.googleMapsUrl ?? ""}
+              onChange={(e) => update({ googleMapsUrl: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
+          </div>
+
+          <div className="pt-2 border-t border-stone-200">
+            <span className="text-[11px] font-bold uppercase text-stone-500 tracking-wider">Travel &amp; Logistics Details</span>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-stone-900 mb-1">Nearest Airport Details</label>
             <input
@@ -700,6 +1086,109 @@ export function WeddingSectionControls({
                 className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 8. REGISTRY & AUSPICIOUS SHAGUN */}
+      {type === "wedding_registry" && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Section Headline</label>
+            <input
+              type="text"
+              value={config.headline ?? "Registry & Auspicious Shagun"}
+              onChange={(e) => update({ headline: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Subtext / Intro</label>
+            <input
+              type="text"
+              value={config.subtext ?? ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Gifting / Shagun Message</label>
+            <textarea
+              rows={2}
+              value={config.message ?? ""}
+              onChange={(e) => update({ message: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">UPI ID (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. shubh.vivah@upi"
+              value={config.upiId ?? ""}
+              onChange={(e) => update({ upiId: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-mono"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-stone-900 mb-1">Bank Name</label>
+              <input
+                type="text"
+                placeholder="e.g. HDFC Bank"
+                value={config.bankName ?? ""}
+                onChange={(e) => update({ bankName: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-900 mb-1">Account Holder Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Vikram Iyer"
+                value={config.accountHolder ?? ""}
+                onChange={(e) => update({ accountHolder: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-stone-900 mb-1">Account Number</label>
+              <input
+                type="text"
+                placeholder="e.g. 50100234567890"
+                value={config.accountNumber ?? ""}
+                onChange={(e) => update({ accountNumber: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-900 mb-1">IFSC Code</label>
+              <input
+                type="text"
+                placeholder="e.g. HDFC0001234"
+                value={config.ifscCode ?? ""}
+                onChange={(e) => update({ ifscCode: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-mono uppercase"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-900 mb-1">Custom Note / Etiquette</label>
+            <input
+              type="text"
+              placeholder="e.g. Traditional blessings &amp; shagun are warmly received. No boxed gifts, please."
+              value={config.registryNote ?? ""}
+              onChange={(e) => update({ registryNote: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
+            />
           </div>
         </div>
       )}

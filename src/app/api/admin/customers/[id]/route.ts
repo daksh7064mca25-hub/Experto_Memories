@@ -5,6 +5,7 @@ import { WebsiteProject } from "@/models/WebsiteProject";
 import { Order } from "@/models/Order";
 import { getAdminSession } from "@/lib/auth";
 import { logAdminAction } from "@/lib/audit";
+import mongoose from "mongoose";
 
 interface Context {
   params: Promise<{ id: string }>;
@@ -18,6 +19,9 @@ export async function GET(req: Request, context: Context) {
     }
 
     const { id } = await context.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid customer ID" }, { status: 400 });
+    }
     await connectToDatabase();
 
     const customer = await CustomerUser.findById(id).select("-passwordHash").lean();
@@ -74,6 +78,9 @@ export async function PATCH(req: Request, context: Context) {
     }
 
     const { id } = await context.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid customer ID" }, { status: 400 });
+    }
     const body = await req.json();
     const { action, reason, suspendWebsites } = body;
 

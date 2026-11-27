@@ -90,6 +90,7 @@ export function AnniversaryThenNowSection({ config, theme }: Props) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-lg aspect-4/3 rounded-3xl overflow-hidden border-2 border-rose-200 shadow-2xl cursor-ew-resize select-none touch-none bg-stone-100"
+        style={{ containerType: "inline-size" }}
       >
         {/* RIGHT / "NOW" IMAGE (Background) */}
         <img
@@ -112,7 +113,7 @@ export function AnniversaryThenNowSection({ config, theme }: Props) {
             alt="Then memory"
             className="absolute inset-y-0 left-0 max-w-none object-cover h-full"
             style={{
-              width: containerRef.current ? `${containerRef.current.clientWidth}px` : "100%",
+              width: "100cqw",
             }}
             draggable={false}
           />

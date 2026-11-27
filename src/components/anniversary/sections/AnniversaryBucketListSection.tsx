@@ -18,12 +18,14 @@ export function AnniversaryBucketListSection({ config, theme }: Props) {
 
   // Load saved bucket list selections from localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("em_anniv_bucket_list");
-      if (saved) {
-        setSelectedIds(new Set(JSON.parse(saved)));
-      }
-    } catch {}
+    Promise.resolve().then(() => {
+      try {
+        const saved = localStorage.getItem("em_anniv_bucket_list");
+        if (saved) {
+          setSelectedIds(new Set(JSON.parse(saved)));
+        }
+      } catch {}
+    });
   }, []);
 
   const toggleItem = (id: string) => {

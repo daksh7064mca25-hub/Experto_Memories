@@ -19,9 +19,12 @@ const CustomDomainSchema = z.object({
 export async function POST(req: Request, context: Context) {
   try {
     const { id } = await context.params;
+    const mongoose = await import("mongoose");
     await connectToDatabase();
 
-    let project = await WebsiteProject.findById(id);
+    let project = mongoose.default.Types.ObjectId.isValid(id)
+      ? await WebsiteProject.findById(id)
+      : null;
     if (!project) {
       project = await WebsiteProject.findOne({ slug: id });
     }
@@ -45,6 +48,13 @@ export async function POST(req: Request, context: Context) {
       return NextResponse.json({ error: "Unauthorized access to project" }, { status: 401 });
     }
 
+    if (!isAdmin && project.paymentStatus !== "paid" && project.status !== "published") {
+      return NextResponse.json(
+        { error: "Custom domain configuration requires an active paid or published project." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const validated = CustomDomainSchema.parse(body);
 
@@ -63,8 +73,11 @@ export async function POST(req: Request, context: Context) {
     if (
       domain === "localhost" ||
       domain.endsWith(".local") ||
+      domain.includes("expertomemories.shop") ||
       domain.includes("expertomemories.com") ||
-      domain.includes("vercel.app")
+      domain.includes("expertomemories.in") ||
+      domain.includes("vercel.app") ||
+      domain.includes("netlify.app")
     ) {
       return NextResponse.json(
         { error: "This domain cannot be used as a custom domain." },
@@ -73,7 +86,7 @@ export async function POST(req: Request, context: Context) {
     }
 
     const settings = await getPlatformSettings();
-    const cnameTarget = settings.cnameTarget || "cname.expertomemories.com";
+    const cnameTarget = settings.cnameTarget || "cname.expertomemories.shop";
 
     // Current custom domain state
     const currentCustomDomain = project.customDomain || {

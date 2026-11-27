@@ -2,16 +2,37 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "expertomemories-secret-jwt-key-2025-secure!"
-);
+function getProxyJwtSecret(): Uint8Array | null {
+  const secret = process.env.JWT_SECRET;
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.APP_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NETLIFY === "true";
+
+  if (isProduction) {
+    if (!secret || secret.trim().length < 32) {
+      console.error(
+        "[FATAL SECURITY ERROR] In production, JWT_SECRET must be configured in environment variables with at least 32 characters."
+      );
+      return null;
+    }
+    return new TextEncoder().encode(secret.trim());
+  }
+
+  return new TextEncoder().encode(
+    secret?.trim() || "expertomemories-secret-jwt-key-2025-secure!"
+  );
+}
 
 const AUTH_ADMIN_COOKIE = "em_admin_token";
 const AUTH_CUSTOMER_COOKIE = "em_customer_token";
 
 async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const secretKey = getProxyJwtSecret();
+    if (!secretKey) return null; // Safe authentication failure in production if secret is unconfigured
+    const { payload } = await jwtVerify(token, secretKey);
     return payload;
   } catch {
     return null;
@@ -90,10 +111,15 @@ export async function proxy(request: NextRequest) {
     if (customerCookie) {
       const payload = await verifyToken(customerCookie);
       if (payload && (payload as any).role === "customer") {
-        const redirectParam = request.nextUrl.searchParams.get("redirect") || "/dashboard";
-        const targetUrl = request.nextUrl.clone();
-        targetUrl.pathname = redirectParam;
-        targetUrl.search = "";
+        const rawRedirect = request.nextUrl.searchParams.get("redirect") || "/dashboard";
+        const safeRedirect =
+          rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+            ? rawRedirect
+            : "/dashboard";
+        const targetUrl = new URL(safeRedirect, request.url);
+        if (targetUrl.origin !== request.nextUrl.origin) {
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
         return NextResponse.redirect(targetUrl);
       }
     }

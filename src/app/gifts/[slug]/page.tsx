@@ -1,6 +1,8 @@
+import { PublicHeader } from "@/components/navigation/PublicHeader";
 import { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   getProductBySlug,
   CATALOG_PRODUCTS,
@@ -77,47 +79,8 @@ export default async function ProductDetailsPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#faf7f5] text-stone-900 flex flex-col font-sans selection:bg-rose-100 selection:text-rose-900">
-      {/* 1. TOP ANNOUNCEMENT */}
-      <div className="bg-gradient-to-r from-stone-900 via-rose-950 to-stone-900 text-amber-100 text-[11px] py-2 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
-        <Sparkles size={12} className="text-amber-400" />
-        <span>Free Instant Preview • Customize Without Paying • Pay Only When Ready To Publish</span>
-      </div>
-
-      {/* 2. HEADER */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-stone-200/60 transition-all">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-18 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-rose-300/40 group-hover:scale-105 transition-transform">
-              <Heart size={18} className="fill-current" />
-            </div>
-            <div>
-              <span className="font-serif font-bold text-xl tracking-tight text-stone-900 block leading-tight">
-                ExpertoMemories
-              </span>
-              <span className="text-[9px] font-mono tracking-widest text-rose-500 font-semibold uppercase">
-                Digital Gifting Studio
-              </span>
-            </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8 text-xs font-serif font-medium text-stone-600">
-            <Link href="/#products" className="hover:text-rose-600 transition-colors">Explore Gifts</Link>
-            <Link href="/#how-it-works" className="hover:text-rose-600 transition-colors">How It Works</Link>
-            <Link href="/#faq" className="hover:text-rose-600 transition-colors">FAQ</Link>
-            <Link href="/#contact" className="hover:text-rose-600 transition-colors">Need Help?</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/dashboard/create?occasion=${product.occasionType}`}
-              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-serif font-bold bg-rose-500 hover:bg-rose-600 text-white shadow-md shadow-rose-200 transition-all hover:scale-105"
-            >
-              <Gift size={13} />
-              <span>Customize This Gift</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* UNIVERSAL NAVBAR */}
+      <PublicHeader />
 
       {/* 3. BREADCRUMBS */}
       <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-6 pb-2 w-full">
@@ -295,14 +258,25 @@ export default async function ProductDetailsPage({ params }: Props) {
       {/* 5. FOOTER (NO ADMIN BUTTONS) */}
       <footer className="w-full bg-stone-900 text-stone-400 py-10 px-5 sm:px-8 border-t border-stone-800 text-xs mt-12">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
-          <div>
-            <span className="font-serif font-bold text-base text-white block">
-              ExpertoMemories
-            </span>
-            <span className="text-[11px] text-stone-500">
-              Personalized interactive digital gifts delivered via a private link.
-            </span>
-          </div>
+          <Link href="/" className="inline-flex items-center gap-2.5 group" aria-label="ExpertoMemories Home">
+            <div className="relative h-7 w-auto shrink-0 flex items-center">
+              <Image
+                src="/branding/expertomemories-monogram.png"
+                alt="ExpertoMemories EM Monogram"
+                width={505}
+                height={321}
+                className="h-7 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+            <div>
+              <span className="font-serif font-bold text-base text-white block">
+                ExpertoMemories
+              </span>
+              <span className="text-[11px] text-stone-500">
+                Personalized interactive digital gifts delivered via a private link.
+              </span>
+            </div>
+          </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-stone-400 font-serif">
             <Link href="/demo/apology" className="hover:text-white transition-colors">Apology Demo</Link>

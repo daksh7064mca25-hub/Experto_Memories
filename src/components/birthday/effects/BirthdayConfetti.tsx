@@ -43,7 +43,9 @@ export function BirthdayConfetti({ theme }: Props) {
       color: colors[i % colors.length],
     }));
 
-    setParticles(generated);
+    requestAnimationFrame(() => {
+      setParticles(generated);
+    });
   }, [theme]);
 
   if (particles.length === 0) return null;

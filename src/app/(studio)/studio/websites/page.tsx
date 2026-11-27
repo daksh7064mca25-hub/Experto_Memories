@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -46,7 +46,7 @@ function AdminCustomerWebsitesContent() {
   const [suspendReason, setSuspendReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/admin/websites", { credentials: "include" });
@@ -63,11 +63,13 @@ function AdminCustomerWebsitesContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    Promise.resolve().then(() => {
+      fetchProjects();
+    });
+  }, [fetchProjects]);
 
   const handleTogglePublish = async (id: string, currentStatus: string) => {
     try {
@@ -559,7 +561,7 @@ function AdminCustomerWebsitesContent() {
 
             <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 text-xs space-y-1 mb-4 font-mono">
               <p>Requested Domain: <strong className="text-stone-900">{verifyingProj.customDomain?.domainName}</strong></p>
-              <p>Target CNAME: <strong className="text-blue-700">cname.expertomemories.com</strong></p>
+              <p>Target CNAME: <strong className="text-blue-700">cname.expertomemories.shop</strong></p>
               <p>Current Status: <span className="uppercase text-amber-700">{verifyingProj.customDomain?.status}</span></p>
             </div>
 

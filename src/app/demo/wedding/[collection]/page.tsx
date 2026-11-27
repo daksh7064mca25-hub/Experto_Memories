@@ -10,11 +10,14 @@ interface Props {
   }>;
   searchParams?: Promise<{
     theme?: string;
+    ceremony?: string;
+    opened?: string;
   }>;
 }
 
 export function generateStaticParams() {
   return [
+    { collection: "luxury" },
     { collection: "royal" },
     { collection: "hindu" },
     { collection: "punjabi" },
@@ -26,6 +29,7 @@ export function generateStaticParams() {
     { collection: "destination" },
     { collection: "contemporary" },
     // Also include long slugs for full compatibility
+    { collection: "luxury-wedding" },
     { collection: "royal-indian" },
     { collection: "traditional-hindu" },
     { collection: "anand-karaj" },
@@ -54,6 +58,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const titles: Record<string, string> = {
+    "luxury-wedding": "The Luxury Haute Couture Wedding Invitation Demo",
+    luxury: "The Luxury Haute Couture Wedding Invitation Demo",
     "royal-indian": "Royal Indian Wedding Invitation Demo",
     "traditional-hindu": "Traditional Hindu Sacred Vivah Demo",
     punjabi: "Punjabi Shahi Wedding Invitation Demo",
@@ -93,10 +99,25 @@ export default async function WeddingCollectionDemoPage({ params, searchParams }
     demoProject.theme = search.theme as any;
   }
 
+  if (search?.ceremony) {
+    const eventsSec = demoProject.sections?.find((s) => s.type === "wedding_events");
+    if (eventsSec) {
+      eventsSec.config = {
+        ...eventsSec.config,
+        ceremonyType: search.ceremony,
+      };
+    }
+    if (demoProject.weddingDetails) {
+      (demoProject.weddingDetails as any).ceremonyType = search.ceremony;
+    }
+  }
+
+  const isPreviewOpened = search?.opened === "true";
+
   return (
     <div className="relative">
       <WeddingDemoHeader currentCollection={normalizedCollection} />
-      <WeddingRenderer project={demoProject} previewMode={false} />
+      <WeddingRenderer project={demoProject} previewMode={isPreviewOpened} />
     </div>
   );
 }

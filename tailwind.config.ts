@@ -6,6 +6,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/features/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/config/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   darkMode: ["class"],
   theme: {
@@ -54,11 +55,28 @@ const config: Config = {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        pageFlipForward: {
+          "0%": { transform: "perspective(1800px) rotateY(0deg) scale(1)", opacity: "1", filter: "brightness(1)" },
+          "50%": { transform: "perspective(1800px) rotateY(-35deg) scale(0.97)", opacity: "0.88", filter: "brightness(0.92)" },
+          "100%": { transform: "perspective(1800px) rotateY(0deg) scale(1)", opacity: "1", filter: "brightness(1)" },
+        },
+        pageFlipBackward: {
+          "0%": { transform: "perspective(1800px) rotateY(0deg) scale(1)", opacity: "1", filter: "brightness(1)" },
+          "50%": { transform: "perspective(1800px) rotateY(35deg) scale(0.97)", opacity: "0.88", filter: "brightness(0.92)" },
+          "100%": { transform: "perspective(1800px) rotateY(0deg) scale(1)", opacity: "1", filter: "brightness(1)" },
+        },
+        fadeIn: {
+          "0%": { opacity: "0", transform: "translateY(4px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         float: "float 4s ease-in-out infinite",
         "float-slow": "float 7s ease-in-out infinite",
         "pulse-glow": "pulseGlow 2.5s ease-in-out infinite",
+        pageFlipForward: "pageFlipForward 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards",
+        pageFlipBackward: "pageFlipBackward 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards",
+        fadeIn: "fadeIn 0.3s ease-out forwards",
       },
     },
   },

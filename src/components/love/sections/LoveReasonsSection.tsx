@@ -89,6 +89,7 @@ export function LoveReasonsSection({ config, theme }: Props) {
                       src={card.photoUrl}
                       alt={card.title}
                       fill
+                      sizes="(max-width: 640px) 92vw, 436px"
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                       unoptimized={card.photoUrl.startsWith("/api/media/view")}
                     />

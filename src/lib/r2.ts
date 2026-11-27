@@ -46,8 +46,20 @@ export function getR2Client(): S3Client {
 
 export function getR2PublicUrl(key: string): string {
   const cleanKey = key.replace(/^\/+/, "");
+  const isPrivateCustomerAsset =
+    cleanKey.startsWith("uploads/customers/") ||
+    cleanKey.startsWith("uploads/orders/") ||
+    cleanKey.startsWith("uploads/projects/") ||
+    cleanKey.startsWith("uploads/vault/") ||
+    cleanKey.startsWith("uploads/private/");
+
   const publicDomain = getR2PublicDomain();
-  if (publicDomain) {
+  // Only explicitly general/public assets can resolve directly via public domain CDN
+  if (
+    publicDomain &&
+    !isPrivateCustomerAsset &&
+    (cleanKey.startsWith("uploads/general/") || cleanKey.startsWith("uploads/public/"))
+  ) {
     return `${publicDomain}/${cleanKey}`;
   }
   return `/api/media/view?key=${encodeURIComponent(cleanKey)}`;

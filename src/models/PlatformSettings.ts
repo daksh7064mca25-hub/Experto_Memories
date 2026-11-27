@@ -62,7 +62,7 @@ const PlatformSettingsSchema = new Schema<IPlatformSettingsDoc>(
     },
     cnameTarget: {
       type: String,
-      default: "cname.expertomemories.com",
+      default: "cname.expertomemories.shop",
     },
     paymentMethodsAllowed: {
       type: String,
@@ -106,7 +106,7 @@ export async function getPlatformSettings(): Promise<IPlatformSettingsDoc> {
       hostingDurationMonths: 12,
       renewalPolicy:
         "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly by you with your domain registrar.",
-      cnameTarget: "cname.expertomemories.com",
+      cnameTarget: "cname.expertomemories.shop",
       paymentMethodsAllowed: "both",
       manualUpiConfig: {
         bankName: "Primary Bank",

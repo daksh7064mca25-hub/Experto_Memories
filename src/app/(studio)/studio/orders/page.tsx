@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -52,7 +52,7 @@ function StudioOrdersContent() {
   const [methodFilter, setMethodFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -84,11 +84,13 @@ function StudioOrdersContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, methodFilter, searchQuery, router]);
 
   useEffect(() => {
-    fetchOrders();
-  }, [statusFilter, methodFilter]);
+    Promise.resolve().then(() => {
+      fetchOrders();
+    });
+  }, [fetchOrders]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,8 +308,76 @@ function StudioOrdersContent() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div>
+            {/* Mobile Order Cards View (<768px) */}
+            <div className="md:hidden divide-y divide-stone-100">
+              {orders.map((ord) => {
+                const item = ord.items?.[0];
+                const isNeedsVerification =
+                  ord.paymentStatus === "payment_pending_verification" ||
+                  (ord.paymentMethod === "manual_upi" &&
+                    ord.paymentStatus === "pending" &&
+                    Boolean(ord.manualUpiDetails?.utrNumber));
+
+                return (
+                  <div key={ord._id} className="p-4 space-y-3 bg-white">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <Link href={`/studio/orders/${ord._id}`} className="font-mono font-bold text-xs text-stone-900 hover:underline block">
+                          {ord.orderNumber}
+                        </Link>
+                        <span className="text-[10px] text-stone-400 font-mono">
+                          {new Date(ord.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="shrink-0">
+                        {isNeedsVerification ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-bold animate-pulse">
+                            <Clock size={10} /> Verify UTR
+                          </span>
+                        ) : (
+                          renderPaymentBadge(ord.paymentStatus)
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-xs text-stone-900 truncate">
+                        {item?.title || ord.projectId?.title || "Digital Celebration Website"}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-stone-500 font-mono">
+                        <span className="uppercase text-rose-700 font-bold">{item?.occasionType || ord.projectId?.occasionType || "Custom"}</span>
+                        <span>•</span>
+                        <span>{ord.customer?.name || "Customer"}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
+                      <div>
+                        <span className="font-serif font-bold text-sm text-stone-900 block">
+                          ₹{ord.totalAmount?.toLocaleString("en-IN") || ord.totalAmount}
+                        </span>
+                        <span className="text-[10px] font-mono text-stone-500">
+                          {ord.paymentMethod === "razorpay" ? "Razorpay" : "Manual UPI"}
+                        </span>
+                      </div>
+
+                      <Link
+                        href={`/studio/orders/${ord._id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-[11px] font-semibold transition-colors"
+                      >
+                        <span>Manage</span>
+                        <ArrowRight size={11} />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (>=768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
               <thead className="bg-stone-50 text-[10px] font-mono uppercase text-stone-400 border-b border-stone-200">
                 <tr>
                   <th className="py-3 px-4">Order #</th>
@@ -395,6 +465,7 @@ function StudioOrdersContent() {
               </tbody>
             </table>
           </div>
+        </div>
         )}
       </div>
     </div>

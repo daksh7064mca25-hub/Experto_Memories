@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -42,7 +42,7 @@ export default function AdminCustomersPage() {
   const [suspendWebsites, setSuspendWebsites] = useState(true);
   const [actionSubmitting, setActionSubmitting] = useState(false);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -67,11 +67,13 @@ export default function AdminCustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, searchQuery, router]);
 
   useEffect(() => {
-    fetchCustomers();
-  }, [statusFilter]);
+    Promise.resolve().then(() => {
+      fetchCustomers();
+    });
+  }, [fetchCustomers]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

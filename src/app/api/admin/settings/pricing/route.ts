@@ -13,7 +13,7 @@ const UpdatePricingSchema = z.object({
   currency: z.string().default("INR"),
   hostingDurationMonths: z.number().min(1).default(12),
   renewalPolicy: z.string().min(5),
-  cnameTarget: z.string().min(3).default("cname.expertomemories.com"),
+  cnameTarget: z.string().min(3).default("cname.expertomemories.shop"),
   occasionPrices: z.record(z.string(), z.number().min(0)).optional(),
 });
 
@@ -52,17 +52,21 @@ export async function PUT(req: Request) {
           await CatalogueProduct.findOneAndUpdate(
             { productId: def.id },
             {
-              productId: def.id,
-              slug: def.slug,
-              occasionType: def.occasionType,
-              title: def.title,
-              subtitle: def.subtitle || "",
-              price: Number(price),
-              originalPrice: def.originalPrice || Number(price) * 2,
-              isActive: true,
-              description: def.description,
-              features: def.features,
-              demoUrl: def.demoUrl,
+              $set: {
+                price: Number(price),
+              },
+              $setOnInsert: {
+                productId: def.id,
+                slug: def.slug,
+                occasionType: def.occasionType,
+                title: def.title,
+                subtitle: def.subtitle || "",
+                originalPrice: def.originalPrice || Number(price) * 2,
+                isActive: true,
+                description: def.description,
+                features: def.features,
+                demoUrl: def.demoUrl,
+              },
             },
             { upsert: true, new: true }
           );

@@ -93,7 +93,8 @@ export async function GET(req: Request) {
           if (project && project.status === "published") {
             if (project.isPasswordProtected) {
               const cookieHeader = req.headers.get("cookie") || "";
-              const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)em_unlock_${project.slug}=([^;]*)`));
+              const escapedSlug = project.slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)em_unlock(?:ed)?_${escapedSlug}=([^;]*)`));
               if (match && match[1]) {
                 const { verifyWebsiteUnlockToken } = await import("@/lib/auth");
                 const valid = await verifyWebsiteUnlockToken(decodeURIComponent(match[1].trim()), project.slug);
@@ -116,7 +117,8 @@ export async function GET(req: Request) {
         if (project && project.status === "published") {
           if (project.isPasswordProtected) {
             const cookieHeader = req.headers.get("cookie") || "";
-            const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)em_unlock_${project.slug}=([^;]*)`));
+            const escapedSlug = project.slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)em_unlock(?:ed)?_${escapedSlug}=([^;]*)`));
             if (match && match[1]) {
               const { verifyWebsiteUnlockToken } = await import("@/lib/auth");
               const valid = await verifyWebsiteUnlockToken(decodeURIComponent(match[1].trim()), project.slug);

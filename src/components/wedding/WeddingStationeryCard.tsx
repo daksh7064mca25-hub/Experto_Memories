@@ -2,8 +2,80 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Eye, Sparkles } from "lucide-react";
+import { ArrowRight, Eye, Sparkles, Music, Flame } from "lucide-react";
 import { CatalogueTemplate } from "@/config/catalog";
+
+function getCeremonialDetails(slug: string) {
+  const s = slug.toLowerCase();
+  if (s.includes("royal") || s.includes("rajwada")) {
+    return {
+      reveal: "Palace Doors Reveal",
+      music: "Royal Shehnai",
+      symbol: "Jharokha Arch",
+    };
+  }
+  if (s.includes("hindu") || s.includes("traditional")) {
+    return {
+      reveal: "Sacred Diya Lamp",
+      music: "Vedic Nadaswaram",
+      symbol: "Kalash & Shlokas",
+    };
+  }
+  if (s.includes("punjabi")) {
+    return {
+      reveal: "Phulkari Unfold",
+      music: "Joyful Dhol",
+      symbol: "Embroidered Phulkari",
+    };
+  }
+  if (s.includes("sikh") || s.includes("anand")) {
+    return {
+      reveal: "Golden Gurdwara Canopy",
+      music: "Anand Karaj Shabad",
+      symbol: "ੴ Ik Onkar",
+    };
+  }
+  if (s.includes("muslim") || s.includes("nikah")) {
+    return {
+      reveal: "Mughal Jaali Pavilion",
+      music: "Sufi Instrumental",
+      symbol: "Nikahnama Farman",
+    };
+  }
+  if (s.includes("christian")) {
+    return {
+      reveal: "Ribbon Vellum Arch",
+      music: "Cathedral Strings",
+      symbol: "Holy Matrimony",
+    };
+  }
+  if (s.includes("minimal")) {
+    return {
+      reveal: "Editorial Tri-Fold",
+      music: "Contemporary Piano",
+      symbol: "Architectural Linen",
+    };
+  }
+  if (s.includes("floral")) {
+    return {
+      reveal: "Botanical Cascade",
+      music: "Floral Romance",
+      symbol: "Blush Blossoms",
+    };
+  }
+  if (s.includes("destination")) {
+    return {
+      reveal: "Passport Boarding Pass",
+      music: "Coastal Romance",
+      symbol: "Compass & Horizon",
+    };
+  }
+  return {
+    reveal: "Black-Tie Wax Seal",
+    music: "Nocturne Strings",
+    symbol: "Velvet Portfolio",
+  };
+}
 
 interface Props {
   template: CatalogueTemplate;
@@ -91,6 +163,7 @@ export const WeddingStationeryCard: React.FC<Props> = ({ template }) => {
   const shortSlug = template.shortSlug || template.slug.replace("-wedding", "");
   const demoUrl = `/demo/wedding/${shortSlug}`;
   const createUrl = `/dashboard/create?occasion=wedding&collection=${template.slug}`;
+  const ceremonial = getCeremonialDetails(template.slug);
   const colorway = template.cardColorway || {
     cardBg: "from-[#2A0812] via-[#3D0C1A] to-[#1A040A]",
     cardBorder: "border-[#D4AF37]/40",
@@ -189,6 +262,18 @@ export const WeddingStationeryCard: React.FC<Props> = ({ template }) => {
           <p className="text-xs sm:text-sm font-serif italic text-stone-600 mt-2 leading-relaxed">
             &ldquo;{template.editorialSubtitle || template.tagline || template.description}&rdquo;
           </p>
+
+          {/* Cultural Ceremonial & Music Highlights */}
+          <div className="mt-3.5 pt-3 border-t border-[#EAE3D9]/60 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#C5A36A]/10 text-[10px] font-serif font-bold text-[#541D2B] border border-[#C5A36A]/25">
+              <Sparkles size={10} className="text-[#C5A36A]" />
+              <span>{ceremonial.reveal}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-stone-100 text-[10px] font-mono text-stone-600 border border-stone-200">
+              <Music size={10} className="text-stone-500" />
+              <span>{ceremonial.music}</span>
+            </span>
+          </div>
         </div>
 
         {/* 3. TASTEFUL ACTION STRIP */}

@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { WebsiteProject } from "@/models/WebsiteProject";
 import { getAdminSession } from "@/lib/auth";
 import { logAdminAction } from "@/lib/audit";
+import mongoose from "mongoose";
 
 interface Context {
   params: Promise<{ id: string }>;
@@ -22,6 +23,9 @@ export async function POST(req: Request, context: Context) {
     }
 
     const { id } = await context.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+    }
     await connectToDatabase();
 
     const project = await WebsiteProject.findById(id);

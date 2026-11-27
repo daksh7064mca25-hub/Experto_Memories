@@ -21,7 +21,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const validated = LoginSchema.parse(body);
 
-    await connectToDatabase();
+    const conn = await connectToDatabase();
+    if (!conn) {
+      return NextResponse.json({ error: "Database connection unavailable" }, { status: 503 });
+    }
 
     const user = await CustomerUser.findOne({ email: validated.email.toLowerCase() });
     if (!user) {
@@ -35,7 +38,7 @@ export async function POST(req: Request) {
 
     if (user.isSuspended) {
       return NextResponse.json(
-        { error: "Your customer account has been suspended. Please contact support@expertomemories.in." },
+        { error: "Your customer account has been suspended. Please contact support@expertomemories.shop." },
         { status: 403 }
       );
     }

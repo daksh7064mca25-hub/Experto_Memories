@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
 
 interface LovePetalsProps {
   theme?: string;
@@ -17,16 +17,18 @@ interface PetalItem {
   type: "petal" | "sparkle";
 }
 
+const emptySubscribe = () => () => {};
+
 export function LovePetals({ theme }: LovePetalsProps) {
   const [petals, setPetals] = useState<PetalItem[]>([]);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const prefersReducedMotion = useSyncExternalStore(
+    emptySubscribe,
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false
+  );
 
   useEffect(() => {
-    // Respect user's motion preferences
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setPrefersReducedMotion(true);
-      return;
-    }
+    if (prefersReducedMotion) return;
 
     const items: PetalItem[] = Array.from({ length: 18 }).map((_, i) => ({
       id: i,
@@ -39,8 +41,8 @@ export function LovePetals({ theme }: LovePetalsProps) {
       type: i % 4 === 0 ? "sparkle" : "petal",
     }));
 
-    setPetals(items);
-  }, []);
+    queueMicrotask(() => setPetals(items));
+  }, [prefersReducedMotion]);
 
   if (prefersReducedMotion) return null;
 

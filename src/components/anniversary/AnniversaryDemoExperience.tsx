@@ -34,12 +34,14 @@ export function AnniversaryDemoExperience({
 
   // Detect iframe embedding on mount & reset demo session storage
   useEffect(() => {
-    try {
-      const inIframe = window.self !== window.top;
-      setIsInIframe(inIframe || isEmbedded);
-    } catch {
-      setIsInIframe(true);
-    }
+    Promise.resolve().then(() => {
+      try {
+        const inIframe = window.self !== window.top;
+        setIsInIframe(inIframe || isEmbedded);
+      } catch {
+        setIsInIframe(true);
+      }
+    });
 
     // Reset demo quiz and bucket list state on fresh demo mount
     try {
@@ -201,15 +203,9 @@ export function AnniversaryDemoExperience({
         </aside>
       )}
 
-      {/* 5. FOOTER NOTE */}
-      <footer className="w-full bg-white border-t border-rose-100 py-6 px-4 text-center text-xs text-stone-500 font-sans">
-        <p className="font-serif font-bold text-rose-900 mb-1">
-          ExpertoMemories — Our Forever Story
-        </p>
-        <p className="text-[11px] text-stone-400 mb-2">
-          Personalized Interactive Digital Anniversary Websites • Fictional Demo Experience
-        </p>
-        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-rose-600">
+      {/* 5. DEMO CONTROLS BAR */}
+      <footer className="w-full bg-white border-t border-rose-100 py-4 px-4 text-center text-xs text-stone-500 font-sans">
+        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-rose-600 mb-1">
           <button type="button" onClick={handleResetDemo} className="hover:underline flex items-center gap-1">
             <RotateCcw size={11} /> Reset Sample
           </button>
@@ -222,6 +218,9 @@ export function AnniversaryDemoExperience({
             <ArrowLeft size={11} /> Back to Catalog
           </Link>
         </div>
+        <p className="text-[11px] text-stone-400">
+          Fictional Sample Preview
+        </p>
       </footer>
     </div>
   );

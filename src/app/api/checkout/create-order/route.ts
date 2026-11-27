@@ -108,8 +108,19 @@ export async function POST(req: Request) {
       });
     }
 
-    if (totalAmount <= 0) {
-      return NextResponse.json({ error: "Order total must be greater than zero." }, { status: 400 });
+    // 1b. Server-Side Payment Method Enforcement
+    const allowedMethod = effectivePricing.paymentMethodsAllowed || "both";
+    if (validated.paymentMethod === "razorpay" && allowedMethod === "upi_only") {
+      return NextResponse.json(
+        { error: "Razorpay payment is currently disabled. Please use Direct UPI payment." },
+        { status: 400 }
+      );
+    }
+    if (validated.paymentMethod === "manual_upi" && allowedMethod === "razorpay_only") {
+      return NextResponse.json(
+        { error: "Direct UPI payment is currently disabled. Please use Online Payment Gateway (Razorpay)." },
+        { status: 400 }
+      );
     }
 
     // 2. Generate unique human-readable order number

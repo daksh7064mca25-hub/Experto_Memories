@@ -11,7 +11,14 @@ import { WeddingStorySection } from "./sections/WeddingStorySection";
 import { WeddingGallerySection } from "./sections/WeddingGallerySection";
 import { WeddingRSVPSection } from "./sections/WeddingRSVPSection";
 import { WeddingTravelSection } from "./sections/WeddingTravelSection";
+import { WeddingRegistrySection } from "./sections/WeddingRegistrySection";
 import { WeddingWishesSection } from "./sections/WeddingWishesSection";
+import { HinduWeddingExperience } from "./HinduWeddingExperience";
+import { RoyalIndianWeddingExperience } from "./RoyalIndianWeddingExperience";
+import { LuxuryWeddingExperience } from "./LuxuryWeddingExperience";
+import { PunjabiWeddingExperience } from "./PunjabiWeddingExperience";
+import { DestinationWeddingExperience } from "./destination/DestinationWeddingExperience";
+import { ExpertoMemoriesBrandSignature } from "@/components/common/ExpertoMemoriesBrandSignature";
 import { Volume2, VolumeX, Music, Sparkles } from "lucide-react";
 
 interface Props {
@@ -20,6 +27,88 @@ interface Props {
 }
 
 export const WeddingRenderer: React.FC<Props> = ({ project, previewMode = false }) => {
+  // Isolate the Hindu Temple & Mandap Experience exclusively to the traditional Hindu template
+  const isHinduTemplate =
+    project.weddingDetails?.collection === "traditional-hindu" ||
+    project.templateId === "template-wedding-traditional-hindu" ||
+    project.templateId?.includes("traditional-hindu") ||
+    project.subcategoryId?.includes("traditional-hindu") ||
+    (project.theme as string) === "traditional-hindu";
+
+  if (isHinduTemplate) {
+    return <HinduWeddingExperience project={project} previewMode={previewMode} />;
+  }
+
+  // Isolate the Royal Indian Palace Wedding Experience
+  const isRoyalIndianTemplate =
+    project.weddingDetails?.collection === "royal-indian" ||
+    project.templateId === "template-wedding-royal-indian" ||
+    project.templateId?.includes("royal-indian") ||
+    project.subcategoryId?.includes("royal-indian") ||
+    (project.theme as string) === "royal-indian" ||
+    (!project.weddingDetails?.collection &&
+      !project.templateId?.includes("punjabi") &&
+      !project.templateId?.includes("sikh") &&
+      !project.templateId?.includes("muslim") &&
+      !project.templateId?.includes("christian") &&
+      !project.templateId?.includes("minimal") &&
+      !project.templateId?.includes("floral") &&
+      !project.templateId?.includes("destination") &&
+      !project.templateId?.includes("contemporary") &&
+      !project.templateId?.includes("luxury"));
+
+  if (isRoyalIndianTemplate) {
+    return <RoyalIndianWeddingExperience project={project} previewMode={previewMode} />;
+  }
+
+  // Isolate the Luxury Haute Couture Wedding Experience
+  const isLuxuryWeddingTemplate =
+    project.weddingDetails?.collection === "luxury-wedding" ||
+    project.weddingDetails?.collection === "luxury" ||
+    project.templateId === "template-wedding-luxury" ||
+    project.templateId?.includes("luxury-wedding") ||
+    project.subcategoryId?.includes("luxury-wedding");
+
+  if (isLuxuryWeddingTemplate) {
+    return <LuxuryWeddingExperience project={project} previewMode={previewMode} />;
+  }
+
+  // Isolate the Authentic Punjabi Wedding Celebration Experience
+  const isPunjabiTemplate =
+    project.weddingDetails?.collection === "punjabi" ||
+    project.weddingDetails?.collection === "sikh" ||
+    project.templateId === "template-wedding-punjabi" ||
+    project.templateId === "template-wedding-sikh" ||
+    project.templateId?.includes("punjabi") ||
+    project.templateId?.includes("sikh") ||
+    project.subcategoryId?.includes("punjabi") ||
+    project.subcategoryId?.includes("sikh") ||
+    (project.theme as string) === "punjabi" ||
+    (project.theme as string) === "sikh";
+
+  if (isPunjabiTemplate) {
+    return <PunjabiWeddingExperience project={project} previewMode={previewMode} />;
+  }
+
+  // Isolate the Luxury Destination Wedding Experience
+  const isDestinationTemplate =
+    project.weddingDetails?.collection === "luxury-destination" ||
+    project.weddingDetails?.collection === "destination" ||
+    project.templateId === "template-wedding-luxury-destination" ||
+    project.templateId === "template-wedding-destination" ||
+    project.templateId?.includes("destination") ||
+    project.subcategoryId?.includes("destination") ||
+    (project.theme as string) === "coastal-azure" ||
+    (project.theme as string) === "luxury-destination";
+
+  if (isDestinationTemplate) {
+    return <DestinationWeddingExperience project={project} previewMode={previewMode} />;
+  }
+
+  return <FallbackWeddingExperience project={project} previewMode={previewMode} />;
+};
+
+const FallbackWeddingExperience: React.FC<Props> = ({ project, previewMode = false }) => {
   const theme = getWeddingTheme(project.theme);
   const [invitationOpened, setInvitationOpened] = useState(previewMode);
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
@@ -39,6 +128,7 @@ export const WeddingRenderer: React.FC<Props> = ({ project, previewMode = false 
   const soundtrackSection = getSection("wedding_soundtrack");
   const rsvpSection = getSection("wedding_rsvp");
   const travelSection = getSection("wedding_travel");
+  const registrySection = getSection("wedding_registry");
   const wishesSection = getSection("wedding_wishes");
 
   const musicUrl =
@@ -111,32 +201,37 @@ export const WeddingRenderer: React.FC<Props> = ({ project, previewMode = false 
           {/* Subtle Royal Damask Overlay */}
           <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:24px_24px]" />
 
-          {/* Couple & Parents Section */}
+          {/* 1. Couple Introduction Section */}
           {coupleSection && (
             <WeddingCoupleSection config={coupleSection.config as any} theme={theme} />
           )}
 
-          {/* Auspicious Countdown Section */}
-          {countdownSection && (
-            <WeddingCountdownSection config={countdownSection.config as any} theme={theme} />
-          )}
-
-          {/* Celebrations Agenda Section */}
-          {eventsSection && (
-            <WeddingEventsSection config={eventsSection.config as any} theme={theme} />
-          )}
-
-          {/* Love Story Section */}
+          {/* 2. Our Wedding Story Section */}
           {storySection && (
             <WeddingStorySection config={storySection.config as any} theme={theme} />
           )}
 
-          {/* Photo Gallery Section */}
+          {/* 3. Auspicious Countdown Section */}
+          {countdownSection && (
+            <WeddingCountdownSection config={countdownSection.config as any} theme={theme} />
+          )}
+
+          {/* 4. Wedding Events Section */}
+          {eventsSection && (
+            <WeddingEventsSection config={eventsSection.config as any} theme={theme} />
+          )}
+
+          {/* 5. Venue and Location Section */}
+          {travelSection && (
+            <WeddingTravelSection config={travelSection.config as any} theme={theme} />
+          )}
+
+          {/* 6. Couple Photo Gallery Section */}
           {gallerySection && (
             <WeddingGallerySection config={gallerySection.config as any} theme={theme} />
           )}
 
-          {/* Guest RSVP Section */}
+          {/* 7. Guest RSVP Section */}
           {rsvpSection && (
             <WeddingRSVPSection
               config={rsvpSection.config as any}
@@ -147,19 +242,29 @@ export const WeddingRenderer: React.FC<Props> = ({ project, previewMode = false 
             />
           )}
 
-          {/* Travel & Hospitality Section */}
-          {travelSection && (
-            <WeddingTravelSection config={travelSection.config as any} theme={theme} />
+          {/* 8. Registry and Gifts Section */}
+          {registrySection ? (
+            <WeddingRegistrySection config={registrySection.config as any} theme={theme} />
+          ) : (
+            <WeddingRegistrySection theme={theme} />
           )}
 
-          {/* Family Blessings & WhatsApp Sharing Section */}
+          {/* 9. Thank-You Ending Section */}
           {wishesSection && (
             <WeddingWishesSection
               config={wishesSection.config as any}
               theme={theme}
               projectSlug={project.slug}
+              coupleNames={project.recipientName}
             />
           )}
+
+          {/* Official ExpertoMemories Brand Signature */}
+          <ExpertoMemoriesBrandSignature
+            occasionType="wedding"
+            theme={project.theme}
+            previewMode={previewMode}
+          />
         </main>
       )}
     </div>

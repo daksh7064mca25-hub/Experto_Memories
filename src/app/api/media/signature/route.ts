@@ -4,7 +4,7 @@ import { getAdminSession } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    const session = await getAdminSession();
+    const session = await getAdminSession(req);
     if (!session || session.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized. Admin session required." }, { status: 401 });
     }

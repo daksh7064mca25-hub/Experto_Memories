@@ -4,7 +4,7 @@ import { AdminAuditLog } from "@/models/AdminAuditLog";
 export interface LogAdminActionParams {
   actor: string;
   action: string;
-  targetType: "order" | "customer" | "website" | "domain" | "pricing" | "catalogue" | "system";
+  targetType: "order" | "customer" | "website" | "domain" | "pricing" | "catalogue" | "system" | "review";
   targetId?: string;
   targetIdentifier?: string;
   details?: Record<string, any>;

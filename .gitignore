@@ -4,7 +4,9 @@
 .pnp.js
 
 # Testing & Local Development Scaffolding
+/docs/
 /coverage
+/tests
 /scratch
 /screenshots
 /test-screenshots
@@ -17,6 +19,8 @@ migrate-*.mjs
 check-*.mjs
 verify-*.mjs
 09-PRODUCTION-READINESS-AUDIT.md
+eslint_all.json
+*.json.tmp
 
 # Next.js Build Output
 /.next/

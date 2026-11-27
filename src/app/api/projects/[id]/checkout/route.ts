@@ -122,6 +122,21 @@ export async function POST(req: Request, context: Context) {
 
     let razorpayOrderId: string | undefined = undefined;
 
+    // 6b. Server-Side Payment Method Enforcement
+    const allowedMethod = settings.paymentMethodsAllowed || "both";
+    if (validated.paymentMethod === "razorpay" && allowedMethod === "upi_only") {
+      return NextResponse.json(
+        { error: "Razorpay payment is currently disabled by administrator. Please use Direct UPI." },
+        { status: 400 }
+      );
+    }
+    if (validated.paymentMethod === "manual_upi" && allowedMethod === "razorpay_only") {
+      return NextResponse.json(
+        { error: "Direct UPI payment is currently disabled by administrator. Please use Razorpay." },
+        { status: 400 }
+      );
+    }
+
     // 7. Razorpay Order Creation
     if (validated.paymentMethod === "razorpay") {
       if (!isRazorpayConfigured()) {
@@ -233,7 +248,7 @@ export async function POST(req: Request, context: Context) {
         dnsInstructions: {
           recordType: "CNAME",
           host: "@",
-          target: settings.cnameTarget || "cname.expertomemories.com",
+          target: settings.cnameTarget || "cname.expertomemories.shop",
         },
         notes: "Awaiting checkout payment completion",
       };

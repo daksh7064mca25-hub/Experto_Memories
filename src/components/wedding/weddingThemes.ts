@@ -222,6 +222,26 @@ export const WEDDING_THEMES: Record<string, WeddingThemeStyles> = {
     monogramBorder: "border-[#38BDF8]",
     highlightGlow: "rgba(56, 189, 248, 0.3)",
   },
+  "champagne-gold": {
+    id: "champagne-gold",
+    name: "Champagne & Warm Ivory",
+    bgGradient: "bg-gradient-to-b from-[#1C1612] via-[#2A1F18] to-[#120E0B]",
+    cardBg: "bg-[#241C16]/90 backdrop-blur-md",
+    cardBorder: "border-[#D4AF37]/50",
+    textPrimary: "text-[#FAF5ED]",
+    textSecondary: "text-[#E8D49E]",
+    textMuted: "text-[#D4AF37]/80",
+    accentGold: "text-[#D4AF37]",
+    accentBadge: "bg-[#D4AF37]/20 text-[#FAF5ED] border border-[#D4AF37]/40",
+    accentGlow: "shadow-[0_0_30px_rgba(212,175,55,0.35)]",
+    buttonPrimary: "bg-gradient-to-r from-[#D4AF37] via-[#F3E2B3] to-[#C5A36A] text-[#1A140F] font-semibold hover:brightness-110 shadow-lg",
+    buttonSecondary: "bg-[#1C1612]/70 border border-[#D4AF37]/50 text-[#FAF5ED] hover:bg-[#241C16]",
+    doorBgLeft: "bg-gradient-to-r from-[#120E0B] via-[#241C16] to-[#1C1612]",
+    doorBgRight: "bg-gradient-to-l from-[#120E0B] via-[#241C16] to-[#1C1612]",
+    doorPattern: "radial-gradient(circle at 50% 50%, rgba(212,175,55,0.2) 0%, transparent 60%)",
+    monogramBorder: "border-[#D4AF37]",
+    highlightGlow: "rgba(212, 175, 55, 0.4)",
+  },
 };
 
 export function getWeddingTheme(themeId?: string): WeddingThemeStyles {

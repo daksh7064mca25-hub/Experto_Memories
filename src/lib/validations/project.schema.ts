@@ -32,6 +32,7 @@ export const ALL_THEME_IDS = [
   "velvet-onyx",
   "botanical-sage",
   "coastal-azure",
+  "champagne-gold",
 ] as const;
 
 export const CreateProjectSchema = z.object({

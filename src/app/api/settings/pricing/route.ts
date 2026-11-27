@@ -7,10 +7,22 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const { effectivePricing } = await getEffectivePricing();
+    const safeManualUpiConfig = effectivePricing.manualUpiConfig
+      ? {
+          upiId: effectivePricing.manualUpiConfig.upiId,
+          displayName: effectivePricing.manualUpiConfig.displayName,
+          qrCodeUrl: effectivePricing.manualUpiConfig.qrCodeUrl,
+          bankName: effectivePricing.manualUpiConfig.bankName,
+        }
+      : undefined;
+
     return NextResponse.json(
       {
         success: true,
-        pricing: effectivePricing,
+        pricing: {
+          ...effectivePricing,
+          manualUpiConfig: safeManualUpiConfig,
+        },
       },
       {
         headers: {
@@ -31,7 +43,7 @@ export async function GET() {
           hostingDurationMonths: 12,
           renewalPolicy:
             "1 Year hosting included. Annual hosting renewal applies thereafter. Custom domain renewal after Year 1 is managed directly by you with your domain registrar.",
-          cnameTarget: "cname.expertomemories.com",
+          cnameTarget: "cname.expertomemories.shop",
           occasionPrices: {
             anniversary: 299,
             apology: 349,
@@ -40,6 +52,7 @@ export async function GET() {
             wedding: 999,
           },
           products: [],
+          paymentMethodsAllowed: "both",
         },
       },
       {

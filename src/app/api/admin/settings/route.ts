@@ -14,7 +14,7 @@ const SettingsUpdateSchema = z.object({
   currency: z.string().default("INR"),
   hostingDurationMonths: z.number().min(1).default(12),
   renewalPolicy: z.string().min(5),
-  cnameTarget: z.string().min(3).default("cname.expertomemories.com"),
+  cnameTarget: z.string().min(3).default("cname.expertomemories.shop"),
   paymentMethodsAllowed: z.enum(["both", "razorpay_only", "upi_only"]).default("both"),
   manualUpiConfig: z
     .object({
@@ -112,7 +112,8 @@ export async function PUT(req: Request) {
 
     await settings.save();
 
-    // If occasion-specific prices are provided, update CatalogueProduct overrides
+    // If occasion-specific prices are provided, update CatalogueProduct price overrides safely
+    // SAFEGUARD: Only update the price field via $set. NEVER overwrite isActive, originalPrice, or metadata.
     if (validated.occasionPrices) {
       for (const [key, price] of Object.entries(validated.occasionPrices)) {
         const def = CATALOG_PRODUCTS.find(
@@ -122,17 +123,21 @@ export async function PUT(req: Request) {
           await CatalogueProduct.findOneAndUpdate(
             { productId: def.id },
             {
-              productId: def.id,
-              slug: def.slug,
-              occasionType: def.occasionType,
-              title: def.title,
-              subtitle: def.subtitle || "",
-              price: Number(price),
-              originalPrice: def.originalPrice || Number(price) * 2,
-              isActive: true,
-              description: def.description,
-              features: def.features,
-              demoUrl: def.demoUrl,
+              $set: {
+                price: Number(price),
+              },
+              $setOnInsert: {
+                productId: def.id,
+                slug: def.slug,
+                occasionType: def.occasionType,
+                title: def.title,
+                subtitle: def.subtitle || "",
+                originalPrice: def.originalPrice || Number(price) * 2,
+                isActive: true,
+                description: def.description,
+                features: def.features,
+                demoUrl: def.demoUrl,
+              },
             },
             { upsert: true, new: true }
           );
